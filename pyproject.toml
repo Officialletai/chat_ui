@@ -1,0 +1,20 @@
+# pyproject.toml
+[build-system]
+requires = ["hatchling", "hatch-jupyter-builder"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chat_ui"
+version = "0.1.0"
+dependencies = [
+    "anywidget",
+    "traitlets",
+    "pandas",
+    "markdown"
+]
+# Include the Python package and the bundled static assets.
+[tool.hatch.build.targets.wheel]
+include = [
+    "chat_ui/**",
+    "chat_ui/static/**"
+]
