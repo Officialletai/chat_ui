@@ -16,13 +16,9 @@ export default {
   },
   
   render({ model, el }) {
-    // Create widget with artifacts panel and chat container
+    // Create widget with chat container and artifacts panel on the right
     el.innerHTML = `
       <div class="chat-widget-container">
-        <div class="artifacts-panel">
-          <div class="artifacts-header">Code Artifacts</div>
-          <div class="artifacts-list"></div>
-        </div>
         <div class="chat-container">
           <div class="chat-history"></div>
           <div class="input-container">
@@ -31,6 +27,10 @@ export default {
               <button id="send-button">Send</button>
             </div>
           </div>
+        </div>
+        <div class="artifacts-panel">
+          <div class="artifacts-header">Data Artifacts</div>
+          <div class="artifacts-list"></div>
         </div>
       </div>
     `;
@@ -49,15 +49,84 @@ export default {
       // Add each artifact to the panel
       Object.values(artifacts).forEach(artifact => {
         const artifactEl = document.createElement('div');
-        artifactEl.className = 'artifact';
+        artifactEl.className = `artifact artifact-type-${artifact.type || 'code'}`;
         artifactEl.dataset.id = artifact.id;
+        
+        // Different rendering based on artifact type
+        let contentHTML = '';
+        const artifactType = artifact.type || 'code';
+        
+        if (artifactType === 'dataframe') {
+          // Render DataFrame
+          contentHTML = `
+            <div class="dataframe-info">
+              <div class="dataframe-shape">Shape: ${artifact.content.shape ? `${artifact.content.shape[0]} × ${artifact.content.shape[1]}` : 'N/A'}</div>
+              <div class="dataframe-container">${artifact.content.html || 'No data available'}</div>
+            </div>
+          `;
+        } else if (artifactType === 'sql_result') {
+          // Render SQL with results
+          contentHTML = `
+            <div class="sql-query-section">
+              <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query)}</code></pre>
+            </div>
+            <div class="sql-results-section">
+              <div class="result-header">Results (${artifact.content.result.shape ? `${artifact.content.result.shape[0]} rows` : '0 rows'})</div>
+              <div class="dataframe-container">${artifact.content.result.html || 'No results'}</div>
+            </div>
+          `;
+        } else if (artifactType === 'sql_error') {
+          // Render SQL with error
+          contentHTML = `
+            <div class="sql-query-section">
+              <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query)}</code></pre>
+            </div>
+            <div class="sql-error-section">
+              <div class="error-header">Error</div>
+              <pre class="error-message">${this.escapeHTML(artifact.content.error)}</pre>
+            </div>
+          `;
+        } else if (artifactType === 'sql') {
+          // Just the SQL query
+          contentHTML = `
+            <div class="sql-query-section">
+              <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query || artifact.content)}</code></pre>
+            </div>
+          `;
+        } else if (artifactType === 'visualization') {
+          // Visualization artifact (typically HTML)
+          contentHTML = `
+            <div class="visualization-container">
+              ${typeof artifact.content === 'string' ? artifact.content : 'Visualization not available'}
+            </div>
+          `;
+        } else {
+          // Default code artifact
+          contentHTML = `<pre class="artifact-content"><code>${this.escapeHTML(
+            typeof artifact.content === 'string' ? artifact.content : JSON.stringify(artifact.content, null, 2)
+          )}</code></pre>`;
+        }
+        
+        // Type indicator in the header
+        const typeLabel = {
+          'code': 'Code',
+          'dataframe': 'DataFrame',
+          'sql': 'SQL',
+          'sql_result': 'SQL Result',
+          'sql_error': 'SQL Error',
+          'visualization': 'Visualization',
+          'error': 'Error'
+        }[artifactType] || 'Code';
         
         artifactEl.innerHTML = `
           <div class="artifact-header">
             <div class="artifact-title">${artifact.title || 'Untitled'}</div>
-            <div class="artifact-language">${artifact.language || ''}</div>
+            <div class="artifact-info">
+              ${artifact.language ? `<span class="artifact-language">${artifact.language}</span>` : ''}
+              <span class="artifact-type">${typeLabel}</span>
+            </div>
           </div>
-          <pre class="artifact-content"><code>${this.escapeHTML(artifact.content)}</code></pre>
+          <div class="artifact-content-container">${contentHTML}</div>
         `;
         
         // Add click event to select the artifact
