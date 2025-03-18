@@ -1,4 +1,4 @@
-// Modified chat_ui/static/index.js to add extended thinking UI
+// Modified chat_ui/static/index.js with improved collapsible thinking UI
 
 export default {
   initialize({ model }) {
@@ -57,6 +57,7 @@ export default {
     // Initialize thinking state variables
     this.thinkingSteps = [];
     this.currentThinkingMessage = null;
+    this.thinkingExpanded = false;
     
     // Function to show a specific artifact by index
     this.showArtifactByIndex = function(model, index) {
@@ -245,6 +246,56 @@ export default {
       this.updateArtifactsNavigation(model);
     };
     
+    // Helper function to escape HTML
+    this.escapeHTML = function(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+    
+    // Function to toggle thinking expanded/collapsed state
+    this.toggleThinkingExpanded = function() {
+      this.thinkingExpanded = !this.thinkingExpanded;
+      this.updateThinkingMessageDisplay();
+    };
+    
+    // Update the thinking message display based on expanded/collapsed state
+    this.updateThinkingMessageDisplay = function() {
+      if (!this.currentThinkingMessage) return;
+      
+      const thinkingBody = this.currentThinkingMessage.querySelector('.thinking-body');
+      const toggleIcon = this.currentThinkingMessage.querySelector('.thinking-toggle-icon');
+      
+      if (this.thinkingExpanded) {
+        // Show all steps when expanded
+        thinkingBody.classList.remove('collapsed');
+        toggleIcon.innerHTML = '&#9650;'; // Up arrow
+        toggleIcon.setAttribute('aria-label', 'Collapse thinking');
+      } else {
+        // Hide all but latest step when collapsed
+        thinkingBody.classList.add('collapsed');
+        toggleIcon.innerHTML = '&#9660;'; // Down arrow
+        toggleIcon.setAttribute('aria-label', 'Expand thinking');
+      }
+    };
+
+    // Add a click handler to a thinking toggle button
+    this.setupThinkingToggleHandler = function(toggleBtn) {
+      if (toggleBtn) {
+        // Remove any existing event listeners to prevent duplicates
+        toggleBtn.removeEventListener('click', this.toggleThinkingBound);
+        
+        // Add the event listener
+        toggleBtn.addEventListener('click', this.toggleThinkingBound);
+      }
+    };
+
+    // Bind the toggleThinking method to this instance
+    this.toggleThinkingBound = this.toggleThinkingExpanded.bind(this);
+
     // Update the thinking UI based on model state
     this.updateThinkingUI = function(model) {
       const isThinking = model.get("thinking_active") || false;
@@ -256,35 +307,74 @@ export default {
         this.currentThinkingMessage = document.createElement("div");
         this.currentThinkingMessage.className = "message other-message thinking-message";
         this.currentThinkingMessage.innerHTML = `
-          <div class="thinking-header">
-            <div class="thinking-indicator">
-              <span class="thinking-dot"></span>
-              <span class="thinking-dot"></span>
-              <span class="thinking-dot"></span>
+          <div class="thinking-container">
+            <div class="thinking-header">
+              <div class="thinking-header-left">
+                <div class="thinking-indicator">
+                  <span class="thinking-dot"></span>
+                  <span class="thinking-dot"></span>
+                  <span class="thinking-dot"></span>
+                </div>
+                <div class="thinking-label">Thinking...</div>
+              </div>
+              <div class="thinking-toggle">
+                <button class="thinking-toggle-btn" aria-label="Toggle thinking display">
+                  <span class="thinking-toggle-icon">${this.thinkingExpanded ? '&#9650;' : '&#9660;'}</span>
+                </button>
+              </div>
             </div>
-            <div class="thinking-label">Thinking...</div>
+            <div class="thinking-body ${this.thinkingExpanded ? '' : 'collapsed'}">
+              <div class="thinking-steps"></div>
+            </div>
           </div>
-          <div class="thinking-steps"></div>
         `;
         history.appendChild(this.currentThinkingMessage);
         history.scrollTop = history.scrollHeight;
         
         // Reset the thinking steps
         this.thinkingSteps = [];
+        
+        // Add click handler for toggle button
+        const toggleBtn = this.currentThinkingMessage.querySelector('.thinking-toggle-btn');
+        this.setupThinkingToggleHandler(toggleBtn);
       } 
       // If thinking is no longer active but we have a thinking message, clean up
       else if (!isThinking && this.currentThinkingMessage) {
         // Convert the thinking message to a regular message if there were steps
         if (this.thinkingSteps.length > 0) {
+          // Store the current expansion state
+          const wasExpanded = this.thinkingExpanded;
+          
+          // Update the thinking message to show a summary of the thinking process
           this.currentThinkingMessage.classList.remove("thinking-message");
+          
+          // Create the HTML for all thinking steps
+          const stepsHTML = this.thinkingSteps.map(step => `
+            <div class="thinking-step">
+              <div class="thinking-step-title">${step.title}</div>
+              ${step.body ? `<div class="thinking-step-body">${step.body}</div>` : ''}
+            </div>
+          `).join('');
+          
           this.currentThinkingMessage.innerHTML = `
             <div class="thinking-result">
-              <div class="thinking-result-header">My thinking process:</div>
-              <div class="thinking-steps">
-                ${this.thinkingSteps.map(step => `<div class="thinking-step">${step}</div>`).join('')}
+              <div class="thinking-result-header">
+                <span>My thinking process:</span>
+                <div class="thinking-toggle">
+                  <button class="thinking-toggle-btn" aria-label="Toggle thinking display">
+                    <span class="thinking-toggle-icon">${wasExpanded ? '&#9650;' : '&#9660;'}</span>
+                  </button>
+                </div>
+              </div>
+              <div class="thinking-body ${wasExpanded ? '' : 'collapsed'}">
+                <div class="thinking-steps">${stepsHTML}</div>
               </div>
             </div>
           `;
+          
+          // Re-add click handler for toggle button
+          const toggleBtn = this.currentThinkingMessage.querySelector('.thinking-toggle-btn');
+          this.setupThinkingToggleHandler(toggleBtn);
         } else {
           // If there were no steps, just remove the thinking message
           this.currentThinkingMessage.remove();
@@ -296,32 +386,46 @@ export default {
     };
     
     // Add a new thinking step
-    this.addThinkingStep = function(content) {
+    this.addThinkingStep = function(title, body) {
       if (this.currentThinkingMessage) {
-        // Add the step to our array
-        this.thinkingSteps.push(content);
+        // Save the step to our array
+        const step = { title, body };
+        this.thinkingSteps.push(step);
         
-        // Update the UI
+        // Save the current expanded state
+        const wasExpanded = this.thinkingExpanded;
+        
+        // Generate HTML for all steps
+        const allStepsHTML = this.thinkingSteps.map((step, index) => {
+          const isLatest = index === this.thinkingSteps.length - 1;
+          return `
+            <div class="thinking-step ${isLatest ? 'latest-step' : ''}">
+              <div class="thinking-step-title">${step.title}</div>
+              ${step.body ? `<div class="thinking-step-body">${step.body}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+        
+        // Update the steps container
         const stepsContainer = this.currentThinkingMessage.querySelector(".thinking-steps");
-        const stepElement = document.createElement("div");
-        stepElement.className = "thinking-step";
-        stepElement.textContent = content;
-        stepsContainer.appendChild(stepElement);
+        stepsContainer.innerHTML = allStepsHTML;
+        
+        // Restore the expanded state
+        const thinkingBody = this.currentThinkingMessage.querySelector('.thinking-body');
+        const toggleIcon = this.currentThinkingMessage.querySelector('.thinking-toggle-icon');
+        
+        if (wasExpanded) {
+          thinkingBody.classList.remove('collapsed');
+          toggleIcon.innerHTML = '&#9650;'; // Up arrow
+        } else {
+          thinkingBody.classList.add('collapsed');
+          toggleIcon.innerHTML = '&#9660;'; // Down arrow
+        }
         
         // Scroll to the bottom
         const history = el.querySelector(".chat-history");
         history.scrollTop = history.scrollHeight;
       }
-    };
-    
-    // Helper function to escape HTML
-    this.escapeHTML = function(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
     };
 
     // Function to append messages to chat history
@@ -381,9 +485,9 @@ export default {
             // Start a new thinking process
             model.set("thinking_active", true);
             model.save_changes();
-          } else if (msg.action === 'add_step' && msg.content) {
-            // Add a new thinking step
-            self.addThinkingStep(msg.content);
+          } else if (msg.action === 'add_step') {
+            // Add a new thinking step with title and optional body
+            self.addThinkingStep(msg.title, msg.body || '');
           } else if (msg.action === 'end') {
             // End the thinking process
             model.set("thinking_active", false);

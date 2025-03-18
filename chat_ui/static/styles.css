@@ -413,15 +413,31 @@
 }
 
 /* Extended Thinking UI Styles */
-.thinking-message {
-    position: relative;
-    padding-top: 15px;
+/* Thinking Container */
+.thinking-container {
+    width: 100%;
+    border-radius: 8px;
+    background-color: #f5f8fb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.2s ease;
   }
   
+  /* Thinking Header */
   .thinking-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 8px 12px;
+    background-color: #f0f4f8;
+    border-bottom: 1px solid #e6ebf1;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .thinking-header-left {
+    display: flex;
+    align-items: center;
   }
   
   .thinking-indicator {
@@ -431,11 +447,11 @@
   }
   
   .thinking-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background-color: #666;
-    margin-right: 4px;
+    margin-right: 3px;
     animation: thinking-pulse 1.4s infinite ease-in-out;
   }
   
@@ -465,26 +481,74 @@
   .thinking-label {
     font-weight: 500;
     color: #666;
+    font-size: 14px;
   }
   
+  /* Toggle Button */
+  .thinking-toggle {
+    display: flex;
+    align-items: center;
+  }
+  
+  .thinking-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: background-color 0.2s;
+  }
+  
+  .thinking-toggle-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .thinking-toggle-icon {
+    font-size: 10px;
+    line-height: 1;
+  }
+  
+  /* Thinking Body */
+  .thinking-body {
+    overflow: hidden;
+    max-height: 1000px; /* Large value for transition */
+    transition: max-height 0.3s ease;
+  }
+  
+  .thinking-body.collapsed {
+    max-height: 80px; /* Just enough to show the latest step */
+    overflow: hidden;
+  }
+  
+  /* Thinking Steps */
   .thinking-steps {
-    margin-top: 10px;
+    padding: 8px 12px;
   }
   
   .thinking-step {
-    padding: 6px 10px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    transition: all 0.3s ease;
-    animation: thinking-step-appear 0.3s ease;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background-color: white;
+    border-radius: 6px;
     border-left: 3px solid #2196F3;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    animation: thinking-step-appear 0.3s ease;
+  }
+  
+  .thinking-step.latest-step {
+    border-left-color: #2196F3;
+    background-color: white;
   }
   
   @keyframes thinking-step-appear {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(5px);
     }
     to {
       opacity: 1;
@@ -492,14 +556,47 @@
     }
   }
   
+  .thinking-step-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .thinking-step-body {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+  
+  /* Thinking Result (after thinking is complete) */
   .thinking-result {
-    padding: 8px 12px;
+    padding: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f5f8fb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
   
   .thinking-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
     font-weight: bold;
-    margin-bottom: 10px;
+    background-color: #f0f4f8;
     color: #555;
+    font-size: 14px;
+    border-bottom: 1px solid #e6ebf1;
+  }
+  
+  /* Override existing styles for thinking in messages */
+  .other-message .thinking-step {
+    background-color: white;
+    border-left: 3px solid #2196F3;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    padding: 8px 10px;
   }
   
   /* Make the chat history a bit larger to accommodate thinking UI */
@@ -507,11 +604,26 @@
     height: 450px;
   }
   
-  /* Styling for thinking steps that appear in final message */
-  .other-message .thinking-step {
-    background-color: #f5f5f5;
-    border-left: 3px solid #2196F3;
-    padding: 6px 10px;
+  /* Fix for nested content within thinking steps */
+  .thinking-step-body ul, 
+  .thinking-step-body ol {
+    margin-top: 8px;
     margin-bottom: 8px;
+    padding-left: 20px;
+  }
+  
+  .thinking-step-body code {
+    font-family: monospace;
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  
+  .thinking-step-body pre {
+    background-color: #f5f5f5;
+    padding: 8px;
     border-radius: 5px;
+    overflow-x: auto;
+    margin: 8px 0;
   }

@@ -1,4 +1,4 @@
-# Modified chat_widget.py to add extended thinking functionality
+# Modified chat_widget.py with structured thinking steps
 import pathlib
 import anywidget
 import traitlets
@@ -73,13 +73,25 @@ class ChatWidget(anywidget.AnyWidget):
         elif msg.lower() == "show thinking":
             # Example of using extended thinking
             self.start_thinking()
-            # Simulate thinking with some steps
-            self.add_thinking_step("First, I need to understand the problem...")
-            time.sleep(1)
-            self.add_thinking_step("Let's analyze the key components...")
-            time.sleep(1)
-            self.add_thinking_step("Now I'll calculate the result based on the provided data.")
-            time.sleep(1)
+            # Simulate thinking with some structured steps
+            self.add_thinking_step(
+                "Problem Analysis", 
+                "First, I need to understand what we're looking for. The question involves statistical analysis of time-series data."
+            )
+            time.sleep(1.5)
+            self.add_thinking_step(
+                "Data Preparation", 
+                "I should prepare the data by checking for missing values, normalizing scales, and ensuring consistent formatting."
+            )
+            time.sleep(1.5)
+            self.add_thinking_step(
+                "Applying Statistical Methods", 
+                """I'll apply several statistical methods:
+                1. Moving averages to identify trends
+                2. Seasonal decomposition to find patterns
+                3. Correlation analysis to find relationships between variables"""
+            )
+            time.sleep(1.5)
             # End thinking and provide the answer
             self.end_thinking()
             response = {"type": "chat_message", "content": "After careful analysis, I've determined the answer is 42."}
@@ -89,19 +101,28 @@ class ChatWidget(anywidget.AnyWidget):
         # Send the response to the front end.
         self.send(response)
     
-    # Extended Thinking Methods
+    # Extended Thinking Methods with structured thinking steps
     def start_thinking(self):
         """Start the extended thinking process."""
         self.thinking_active = True
         self.send({"type": "thinking_update", "action": "start"})
     
-    def add_thinking_step(self, step_content):
-        """Add a new thinking step to the current thinking process."""
+    def add_thinking_step(self, title, body=""):
+        """Add a new thinking step to the current thinking process.
+        
+        Parameters:
+        -----------
+        title : str
+            The title/summary of this thinking step
+        body : str, optional
+            Detailed explanation or content for this thinking step
+        """
         if self.thinking_active:
             self.send({
                 "type": "thinking_update", 
                 "action": "add_step", 
-                "content": step_content
+                "title": title,
+                "body": body
             })
     
     def end_thinking(self):
