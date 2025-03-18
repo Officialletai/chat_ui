@@ -257,9 +257,38 @@ export default {
     };
     
     // Function to toggle thinking expanded/collapsed state
-    this.toggleThinkingExpanded = function() {
-      this.thinkingExpanded = !this.thinkingExpanded;
-      this.updateThinkingMessageDisplay();
+    this.toggleThinkingExpanded = function(event) {
+      // Find the closest thinking container element from the clicked button
+      const toggleBtn = event.currentTarget;
+      const thinkingElement = toggleBtn.closest('.thinking-container') || 
+                            toggleBtn.closest('.thinking-result');
+      
+      if (!thinkingElement) return;
+      
+      // Get current expanded state from data attribute (default to false)
+      const isExpanded = thinkingElement.getAttribute('data-expanded') === 'true';
+      
+      // Toggle the state
+      const newExpandedState = !isExpanded;
+      thinkingElement.setAttribute('data-expanded', newExpandedState);
+      
+      // Find the body and toggle icon within this specific thinking element
+      const thinkingBody = thinkingElement.querySelector('.thinking-body');
+      const toggleIcon = toggleBtn.querySelector('.thinking-toggle-icon');
+      
+      if (thinkingBody && toggleIcon) {
+        if (newExpandedState) {
+          // Show all steps when expanded
+          thinkingBody.classList.remove('collapsed');
+          toggleIcon.innerHTML = '&#9650;'; // Up arrow
+          toggleIcon.setAttribute('aria-label', 'Collapse thinking');
+        } else {
+          // Hide all but latest step when collapsed
+          thinkingBody.classList.add('collapsed');
+          toggleIcon.innerHTML = '&#9660;'; // Down arrow
+          toggleIcon.setAttribute('aria-label', 'Expand thinking');
+        }
+      }
     };
     
     // Update the thinking message display based on expanded/collapsed state
@@ -286,10 +315,10 @@ export default {
     this.setupThinkingToggleHandler = function(toggleBtn) {
       if (toggleBtn) {
         // Remove any existing event listeners to prevent duplicates
-        toggleBtn.removeEventListener('click', this.toggleThinkingBound);
+        toggleBtn.removeEventListener('click', this.toggleThinkingExpanded);
         
-        // Add the event listener
-        toggleBtn.addEventListener('click', this.toggleThinkingBound);
+        // Add the new event listener
+        toggleBtn.addEventListener('click', this.toggleThinkingExpanded);
       }
     };
 
@@ -307,7 +336,7 @@ export default {
         this.currentThinkingMessage = document.createElement("div");
         this.currentThinkingMessage.className = "message other-message thinking-message";
         this.currentThinkingMessage.innerHTML = `
-          <div class="thinking-container">
+          <div class="thinking-container" data-expanded="false">
             <div class="thinking-header">
               <div class="thinking-header-left">
                 <div class="thinking-indicator">
@@ -319,11 +348,11 @@ export default {
               </div>
               <div class="thinking-toggle">
                 <button class="thinking-toggle-btn" aria-label="Toggle thinking display">
-                  <span class="thinking-toggle-icon">${this.thinkingExpanded ? '&#9650;' : '&#9660;'}</span>
+                  <span class="thinking-toggle-icon">&#9660;</span>
                 </button>
               </div>
             </div>
-            <div class="thinking-body ${this.thinkingExpanded ? '' : 'collapsed'}">
+            <div class="thinking-body collapsed">
               <div class="thinking-steps"></div>
             </div>
           </div>
@@ -342,22 +371,26 @@ export default {
       else if (!isThinking && this.currentThinkingMessage) {
         // Convert the thinking message to a regular message if there were steps
         if (this.thinkingSteps.length > 0) {
-          // Store the current expansion state
-          const wasExpanded = this.thinkingExpanded;
+          // Get the current expanded state from the thinking container
+          const thinkingContainer = this.currentThinkingMessage.querySelector('.thinking-container');
+          const wasExpanded = thinkingContainer && thinkingContainer.getAttribute('data-expanded') === 'true';
           
           // Update the thinking message to show a summary of the thinking process
           this.currentThinkingMessage.classList.remove("thinking-message");
           
-          // Create the HTML for all thinking steps
-          const stepsHTML = this.thinkingSteps.map(step => `
-            <div class="thinking-step">
-              <div class="thinking-step-title">${step.title}</div>
-              ${step.body ? `<div class="thinking-step-body">${step.body}</div>` : ''}
-            </div>
-          `).join('');
+          // Create the HTML for all thinking steps, marking the last one as latest
+          const stepsHTML = this.thinkingSteps.map((step, index) => {
+            const isLatest = index === this.thinkingSteps.length - 1;
+            return `
+              <div class="thinking-step ${isLatest ? 'latest-step' : ''}">
+                <div class="thinking-step-title">${step.title}</div>
+                ${step.body ? `<div class="thinking-step-body">${step.body}</div>` : ''}
+              </div>
+            `;
+          }).join('');
           
           this.currentThinkingMessage.innerHTML = `
-            <div class="thinking-result">
+            <div class="thinking-result" data-expanded="${wasExpanded}">
               <div class="thinking-result-header">
                 <span>My thinking process:</span>
                 <div class="thinking-toggle">
@@ -392,10 +425,11 @@ export default {
         const step = { title, body };
         this.thinkingSteps.push(step);
         
-        // Save the current expanded state
-        const wasExpanded = this.thinkingExpanded;
+        // Get the current expanded state from the thinking container
+        const thinkingContainer = this.currentThinkingMessage.querySelector('.thinking-container');
+        const isExpanded = thinkingContainer && thinkingContainer.getAttribute('data-expanded') === 'true';
         
-        // Generate HTML for all steps
+        // Generate HTML for all steps, marking the newest one as latest
         const allStepsHTML = this.thinkingSteps.map((step, index) => {
           const isLatest = index === this.thinkingSteps.length - 1;
           return `
@@ -410,11 +444,11 @@ export default {
         const stepsContainer = this.currentThinkingMessage.querySelector(".thinking-steps");
         stepsContainer.innerHTML = allStepsHTML;
         
-        // Restore the expanded state
+        // Update the collapsed/expanded state
         const thinkingBody = this.currentThinkingMessage.querySelector('.thinking-body');
         const toggleIcon = this.currentThinkingMessage.querySelector('.thinking-toggle-icon');
         
-        if (wasExpanded) {
+        if (isExpanded) {
           thinkingBody.classList.remove('collapsed');
           toggleIcon.innerHTML = '&#9650;'; // Up arrow
         } else {

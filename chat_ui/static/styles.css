@@ -421,10 +421,10 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: all 0.2s ease;
-  }
+}
   
-  /* Thinking Header */
-  .thinking-header {
+/* Thinking Header */
+.thinking-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -433,64 +433,64 @@
     border-bottom: 1px solid #e6ebf1;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-  }
+}
   
-  .thinking-header-left {
+.thinking-header-left {
     display: flex;
     align-items: center;
-  }
+}
   
-  .thinking-indicator {
+.thinking-indicator {
     display: flex;
     align-items: center;
     margin-right: 8px;
-  }
+}
   
-  .thinking-dot {
+.thinking-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background-color: #666;
     margin-right: 3px;
     animation: thinking-pulse 1.4s infinite ease-in-out;
-  }
+}
   
-  .thinking-dot:nth-child(1) {
+.thinking-dot:nth-child(1) {
     animation-delay: 0s;
-  }
+}
   
-  .thinking-dot:nth-child(2) {
+.thinking-dot:nth-child(2) {
     animation-delay: 0.2s;
-  }
+}
   
-  .thinking-dot:nth-child(3) {
+.thinking-dot:nth-child(3) {
     animation-delay: 0.4s;
-  }
+}
   
-  @keyframes thinking-pulse {
+@keyframes thinking-pulse {
     0%, 80%, 100% {
-      transform: scale(0.8);
-      opacity: 0.4;
+        transform: scale(0.8);
+        opacity: 0.4;
     }
     40% {
-      transform: scale(1);
-      opacity: 1;
+        transform: scale(1);
+        opacity: 1;
     }
-  }
+}
   
-  .thinking-label {
+.thinking-label {
     font-weight: 500;
     color: #666;
     font-size: 14px;
-  }
+}
   
-  /* Toggle Button */
-  .thinking-toggle {
+/* Toggle Button */
+.thinking-toggle {
     display: flex;
     align-items: center;
-  }
+}
   
-  .thinking-toggle-btn {
+.thinking-toggle-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -502,35 +502,53 @@
     justify-content: center;
     color: #666;
     transition: background-color 0.2s;
-  }
+}
   
-  .thinking-toggle-btn:hover {
+.thinking-toggle-btn:hover {
     background-color: rgba(0, 0, 0, 0.05);
-  }
+}
   
-  .thinking-toggle-icon {
+.thinking-toggle-icon {
     font-size: 10px;
     line-height: 1;
-  }
+}
   
-  /* Thinking Body */
-  .thinking-body {
+/* Thinking Body */
+.thinking-body {
     overflow: hidden;
     max-height: 1000px; /* Large value for transition */
     transition: max-height 0.3s ease;
-  }
+}
   
-  .thinking-body.collapsed {
-    max-height: 80px; /* Just enough to show the latest step */
+.thinking-body.collapsed {
+    max-height: 50px;
     overflow: hidden;
-  }
+}
   
-  /* Thinking Steps */
-  .thinking-steps {
+/* Hide step bodies when collapsed */
+.thinking-body.collapsed .thinking-step-body {
+    display: none; /* Hide all step bodies when collapsed */
+}
+  
+/* Hide all non-latest steps when collapsed */
+.thinking-body.collapsed .thinking-step:not(.latest-step) {
+    display: none; /* Hide all steps except the latest when collapsed */
+}
+  
+/* Make the latest step compact when collapsed */
+.thinking-body.collapsed .latest-step {
+    padding: 6px 10px; /* Reduce padding for a more compact look */
+    margin-bottom: 0; /* Remove margin for the latest step when collapsed */
+    border-bottom-left-radius: 6px; /* Round the corners nicely */
+    border-bottom-right-radius: 6px;
+}
+
+/* Thinking Steps */
+.thinking-steps {
     padding: 8px 12px;
-  }
+}
   
-  .thinking-step {
+.thinking-step {
     margin-bottom: 10px;
     padding: 8px 10px;
     background-color: white;
@@ -538,14 +556,15 @@
     border-left: 3px solid #2196F3;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     animation: thinking-step-appear 0.3s ease;
-  }
+}
   
-  .thinking-step.latest-step {
+.thinking-step.latest-step {
     border-left-color: #2196F3;
     background-color: white;
-  }
+    
+}
   
-  @keyframes thinking-step-appear {
+@keyframes thinking-step-appear {
     from {
       opacity: 0;
       transform: translateY(5px);
@@ -554,31 +573,37 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
+}
   
-  .thinking-step-title {
+.thinking-step-title {
     font-weight: 500;
     color: #333;
     margin-bottom: 4px;
-  }
+}
   
-  .thinking-step-body {
+.thinking-step-body {
     color: #555;
     font-size: 14px;
     line-height: 1.5;
     white-space: pre-line;
-  }
+}
   
-  /* Thinking Result (after thinking is complete) */
-  .thinking-result {
+/* Thinking Result (after thinking is complete) */
+.thinking-result {
     padding: 0;
     border-radius: 8px;
     overflow: hidden;
     background-color: #f5f8fb;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
+}
+
+/* Ensure the thinking toggle button stays clickable after thinking is done */
+.thinking-result .thinking-toggle-btn {
+    cursor: pointer;
+    opacity: 1;
+}
   
-  .thinking-result-header {
+.thinking-result-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -588,42 +613,110 @@
     color: #555;
     font-size: 14px;
     border-bottom: 1px solid #e6ebf1;
-  }
+}
   
-  /* Override existing styles for thinking in messages */
-  .other-message .thinking-step {
+/* Override existing styles for thinking in messages */
+.other-message .thinking-step {
     background-color: white;
     border-left: 3px solid #2196F3;
     margin-bottom: 8px;
     border-radius: 5px;
     padding: 8px 10px;
-  }
+}
   
-  /* Make the chat history a bit larger to accommodate thinking UI */
-  .chat-container {
+/* Make the chat history a bit larger to accommodate thinking UI */
+.chat-container {
     height: 450px;
-  }
+}
   
-  /* Fix for nested content within thinking steps */
-  .thinking-step-body ul, 
-  .thinking-step-body ol {
+/* Fix for nested content within thinking steps */
+.thinking-step-body ul, 
+.thinking-step-body ol {
     margin-top: 8px;
     margin-bottom: 8px;
     padding-left: 20px;
-  }
+}
   
-  .thinking-step-body code {
+.thinking-step-body code {
     font-family: monospace;
     background-color: #f5f5f5;
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 0.9em;
-  }
+}
   
-  .thinking-step-body pre {
+.thinking-step-body pre {
     background-color: #f5f5f5;
     padding: 8px;
     border-radius: 5px;
     overflow-x: auto;
     margin: 8px 0;
+}
+
+/* Make step titles more prominent */
+.thinking-step-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: #262626;
+    margin-bottom: 6px;
+}
+  
+/* Add a nice divider between steps when expanded */
+.thinking-body:not(.collapsed) .thinking-step:not(:last-child) {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 12px;
+}
+
+/* Add ellipsis indication in collapsed state */
+.thinking-body.collapsed .latest-step .thinking-step-title::after {
+    content: " ...";
+    color: #666;
+    font-weight: normal;
+  }
+
+  /* Enhanced styles to ensure the latest title is always visible */
+
+/* Ensure latest step is always visible even when collapsed */
+.thinking-body.collapsed .thinking-step.latest-step {
+    display: block !important;
+    margin-bottom: 0;
+  }
+  
+  /* Make sure the title is always visible in collapsed mode */
+  .thinking-body.collapsed .thinking-step.latest-step .thinking-step-title {
+    display: block !important;
+    padding: 4px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  
+  /* Improve distinction between headers and content */
+  .thinking-result-header, .thinking-header {
+    background-color: #eef2f7;
+    border-bottom: 1px solid #d8e1eb;
+  }
+  
+  /* Make the latest step stand out more */
+  .thinking-step.latest-step {
+    border-left-color: #4285f4;
+    background-color: #f8fbff;
+  }
+  
+  /* Add extra styling for thinking-result to ensure it maintains proper height */
+  .thinking-result .thinking-body.collapsed {
+    min-height: 50;
+    transition: all 0.3s ease;
+  }
+  
+  /* Add a smooth transition for toggle */
+  .thinking-toggle-btn {
+    transition: transform 0.2s ease;
+  }
+  
+  /* Ensure toggle button is more visible */
+  .thinking-toggle-btn:hover .thinking-toggle-icon {
+    color: #333;
   }
