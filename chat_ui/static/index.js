@@ -17,7 +17,7 @@ export default {
   },
   
   render({ model, el }) {
-    // Create widget with chat container and artifacts panel on the right
+    // Create widget with chat container and initially hidden artifacts panel
     el.innerHTML = `
       <div class="chat-widget-container">
         <div class="chat-container">
@@ -29,7 +29,7 @@ export default {
             </div>
           </div>
         </div>
-        <div class="artifacts-panel">
+        <div class="artifacts-panel hidden">
           <div class="artifacts-header">Data Artifacts</div>
           <div class="artifacts-display"></div>
           <div class="artifacts-navigation">
@@ -87,6 +87,7 @@ export default {
       const nextButton = el.querySelector('.next-button');
       const artifactCounter = el.querySelector('.artifact-counter');
       const artifactsDisplay = el.querySelector('.artifacts-display');
+      const artifactsPanel = el.querySelector('.artifacts-panel');
       
       // Show or hide the list view
       const artifactsList = el.querySelector('.artifacts-list');
@@ -97,6 +98,16 @@ export default {
       
       const artifacts = model.get("artifacts") || {};
       this.artifactIds = Object.keys(artifacts);
+      
+      // Show or hide the artifacts panel based on whether there are any artifacts
+      if (this.artifactIds.length > 0) {
+        // Show the artifacts panel if it was hidden
+        artifactsPanel.classList.remove('hidden');
+      } else {
+        // Hide the artifacts panel if there are no artifacts
+        artifactsPanel.classList.add('hidden');
+        return;
+      }
       
       // Update the counter
       if (this.artifactIds.length > 0) {

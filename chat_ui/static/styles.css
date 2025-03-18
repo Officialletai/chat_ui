@@ -386,6 +386,16 @@
     overflow: auto;
 }
 
+/* Hide artifacts panel initially or when empty */
+.artifacts-panel.hidden {
+    display: none;
+}
+
+/* When artifacts panel is hidden, chat container takes full width */
+.artifacts-panel.hidden + .chat-container {
+    width: 100%;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .artifacts-navigation {
