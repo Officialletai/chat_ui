@@ -392,7 +392,7 @@ export default {
           this.currentThinkingMessage.innerHTML = `
             <div class="thinking-result" data-expanded="${wasExpanded}">
               <div class="thinking-result-header">
-                <span>My thinking process:</span>
+                <span>Finished thinking process:</span>
                 <div class="thinking-toggle">
                   <button class="thinking-toggle-btn" aria-label="Toggle thinking display">
                     <span class="thinking-toggle-icon">${wasExpanded ? '&#9650;' : '&#9660;'}</span>

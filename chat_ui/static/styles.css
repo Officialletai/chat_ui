@@ -481,7 +481,7 @@
 .thinking-label {
     font-weight: 500;
     color: #666;
-    font-size: 14px;
+    font-size: 13px;
 }
   
 /* Toggle Button */
@@ -516,12 +516,12 @@
 /* Thinking Body */
 .thinking-body {
     overflow: hidden;
-    max-height: 1000px; /* Large value for transition */
+    /*max-height: 1000px; /* Large value for transition */
     transition: max-height 0.3s ease;
 }
   
 .thinking-body.collapsed {
-    max-height: 50px;
+    max-height: 60px;
     overflow: hidden;
 }
   
@@ -553,13 +553,13 @@
     padding: 8px 10px;
     background-color: white;
     border-radius: 6px;
-    border-left: 3px solid #2196F3;
+    border-left: 3px solid #4CAF50;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     animation: thinking-step-appear 0.3s ease;
 }
   
 .thinking-step.latest-step {
-    border-left-color: #2196F3;
+    border-left-color: #4CAF50;
     background-color: white;
     
 }
@@ -608,7 +608,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 12px;
-    font-weight: bold;
+    font-weight: 500;
     background-color: #f0f4f8;
     color: #555;
     font-size: 14px;
@@ -618,7 +618,7 @@
 /* Override existing styles for thinking in messages */
 .other-message .thinking-step {
     background-color: white;
-    border-left: 3px solid #2196F3;
+    border-left: 3px solid #4CAF50;
     margin-bottom: 8px;
     border-radius: 5px;
     padding: 8px 10px;
@@ -655,8 +655,8 @@
 
 /* Make step titles more prominent */
 .thinking-step-title {
-    font-weight: 600;
-    font-size: 15px;
+    font-weight: 500;
+    font-size: 12px;
     color: #262626;
     margin-bottom: 6px;
 }
@@ -701,13 +701,12 @@
   
   /* Make the latest step stand out more */
   .thinking-step.latest-step {
-    border-left-color: #4285f4;
-    background-color: #f8fbff;
+    border-left-color: #4CAF50;
   }
   
   /* Add extra styling for thinking-result to ensure it maintains proper height */
   .thinking-result .thinking-body.collapsed {
-    min-height: 50;
+    min-height: 60;
     transition: all 0.3s ease;
   }
   
