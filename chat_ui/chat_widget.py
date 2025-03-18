@@ -1,4 +1,4 @@
-# chat_ui/chat_widget.py
+# Modified chat_widget.py to add extended thinking functionality
 import pathlib
 import anywidget
 import traitlets
@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from markdown import markdown
 import json
+import time
 from IPython.display import HTML
 
 # Define the path to the bundled static assets.
@@ -19,6 +20,9 @@ class ChatWidget(anywidget.AnyWidget):
     # Add traitlets to track artifacts
     artifacts = traitlets.Dict().tag(sync=True)
     current_artifact_id = traitlets.Unicode().tag(sync=True)
+    
+    # Add traitlet for tracking extended thinking state
+    thinking_active = traitlets.Bool(False).tag(sync=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -29,6 +33,7 @@ class ChatWidget(anywidget.AnyWidget):
         # Initialize empty artifacts dict
         self.artifacts = {}
         self.current_artifact_id = ""
+        self.thinking_active = False
 
     def _handle_message_wrapper(self, widget, msg, buffers):
         # Calls the (possibly overridden) message handler.
@@ -65,11 +70,44 @@ class ChatWidget(anywidget.AnyWidget):
                 "Sample Python Function"
             )
             response = {"type": "chat_message", "content": "Created a sample Python artifact."}
+        elif msg.lower() == "show thinking":
+            # Example of using extended thinking
+            self.start_thinking()
+            # Simulate thinking with some steps
+            self.add_thinking_step("First, I need to understand the problem...")
+            time.sleep(1)
+            self.add_thinking_step("Let's analyze the key components...")
+            time.sleep(1)
+            self.add_thinking_step("Now I'll calculate the result based on the provided data.")
+            time.sleep(1)
+            # End thinking and provide the answer
+            self.end_thinking()
+            response = {"type": "chat_message", "content": "After careful analysis, I've determined the answer is 42."}
         else:
             response = {"type": "chat_message", "content": f"You said: {msg}"}
         
         # Send the response to the front end.
         self.send(response)
+    
+    # Extended Thinking Methods
+    def start_thinking(self):
+        """Start the extended thinking process."""
+        self.thinking_active = True
+        self.send({"type": "thinking_update", "action": "start"})
+    
+    def add_thinking_step(self, step_content):
+        """Add a new thinking step to the current thinking process."""
+        if self.thinking_active:
+            self.send({
+                "type": "thinking_update", 
+                "action": "add_step", 
+                "content": step_content
+            })
+    
+    def end_thinking(self):
+        """End the current thinking process."""
+        self.thinking_active = False
+        self.send({"type": "thinking_update", "action": "end"})
     
     def create_artifact(self, artifact_id, content, language="", title="", artifact_type="code"):
         """Create a new code artifact or update an existing one.

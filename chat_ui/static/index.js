@@ -1,4 +1,4 @@
-// Modified chat_ui/static/index.js to add artifact navigation
+// Modified chat_ui/static/index.js to add extended thinking UI
 
 export default {
   initialize({ model }) {
@@ -12,12 +12,17 @@ export default {
       // Update the navigation when current artifact changes
       this.updateArtifactsNavigation(model);
     });
+    
+    // Listen for changes to thinking state
+    model.on("change:thinking_active", () => {
+      this.updateThinkingUI(model);
+    });
 
     return () => {};
   },
   
   render({ model, el }) {
-    // Create widget with chat container and initially hidden artifacts panel
+    // Create widget with chat container, thinking UI, and initially hidden artifacts panel
     el.innerHTML = `
       <div class="chat-widget-container">
         <div class="chat-container">
@@ -48,6 +53,10 @@ export default {
     // Initialize variables to track artifact navigation
     this.artifactIds = [];
     this.currentArtifactIndex = -1;
+    
+    // Initialize thinking state variables
+    this.thinkingSteps = [];
+    this.currentThinkingMessage = null;
     
     // Function to show a specific artifact by index
     this.showArtifactByIndex = function(model, index) {
@@ -236,6 +245,75 @@ export default {
       this.updateArtifactsNavigation(model);
     };
     
+    // Update the thinking UI based on model state
+    this.updateThinkingUI = function(model) {
+      const isThinking = model.get("thinking_active") || false;
+      
+      // If thinking is active but there's no thinking message yet, create one
+      if (isThinking && !this.currentThinkingMessage) {
+        // Create a new thinking message
+        const history = el.querySelector(".chat-history");
+        this.currentThinkingMessage = document.createElement("div");
+        this.currentThinkingMessage.className = "message other-message thinking-message";
+        this.currentThinkingMessage.innerHTML = `
+          <div class="thinking-header">
+            <div class="thinking-indicator">
+              <span class="thinking-dot"></span>
+              <span class="thinking-dot"></span>
+              <span class="thinking-dot"></span>
+            </div>
+            <div class="thinking-label">Thinking...</div>
+          </div>
+          <div class="thinking-steps"></div>
+        `;
+        history.appendChild(this.currentThinkingMessage);
+        history.scrollTop = history.scrollHeight;
+        
+        // Reset the thinking steps
+        this.thinkingSteps = [];
+      } 
+      // If thinking is no longer active but we have a thinking message, clean up
+      else if (!isThinking && this.currentThinkingMessage) {
+        // Convert the thinking message to a regular message if there were steps
+        if (this.thinkingSteps.length > 0) {
+          this.currentThinkingMessage.classList.remove("thinking-message");
+          this.currentThinkingMessage.innerHTML = `
+            <div class="thinking-result">
+              <div class="thinking-result-header">My thinking process:</div>
+              <div class="thinking-steps">
+                ${this.thinkingSteps.map(step => `<div class="thinking-step">${step}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        } else {
+          // If there were no steps, just remove the thinking message
+          this.currentThinkingMessage.remove();
+        }
+        
+        // Reset the current thinking message
+        this.currentThinkingMessage = null;
+      }
+    };
+    
+    // Add a new thinking step
+    this.addThinkingStep = function(content) {
+      if (this.currentThinkingMessage) {
+        // Add the step to our array
+        this.thinkingSteps.push(content);
+        
+        // Update the UI
+        const stepsContainer = this.currentThinkingMessage.querySelector(".thinking-steps");
+        const stepElement = document.createElement("div");
+        stepElement.className = "thinking-step";
+        stepElement.textContent = content;
+        stepsContainer.appendChild(stepElement);
+        
+        // Scroll to the bottom
+        const history = el.querySelector(".chat-history");
+        history.scrollTop = history.scrollHeight;
+      }
+    };
+    
     // Helper function to escape HTML
     this.escapeHTML = function(str) {
       return String(str)
@@ -297,6 +375,20 @@ export default {
           model.set("artifacts", artifacts);
           model.set("current_artifact_id", msg.artifact.id);
           model.save_changes();
+        } else if (msg.type === 'thinking_update') {
+          // Handle thinking updates
+          if (msg.action === 'start') {
+            // Start a new thinking process
+            model.set("thinking_active", true);
+            model.save_changes();
+          } else if (msg.action === 'add_step' && msg.content) {
+            // Add a new thinking step
+            self.addThinkingStep(msg.content);
+          } else if (msg.action === 'end') {
+            // End the thinking process
+            model.set("thinking_active", false);
+            model.save_changes();
+          }
         }
       } else {
         // Backwards compatibility with string messages
