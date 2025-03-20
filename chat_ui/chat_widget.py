@@ -36,8 +36,40 @@ class ChatWidget(anywidget.AnyWidget):
         self.thinking_active = False
 
     def _handle_message_wrapper(self, widget, msg, buffers):
-        # Calls the (possibly overridden) message handler.
-        self.handle_message(widget, msg, buffers)
+        """Wrapper that catches and displays errors from custom message handlers"""
+        try:
+            # Call the (possibly overridden) message handler
+            self.handle_message(widget, msg, buffers)
+        except Exception as e:
+            import traceback
+            import sys
+            
+            # Get the full exception traceback
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            tb_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            tb_text = ''.join(tb_lines)
+            
+            # Create an error message for the UI
+            error_msg = f"<div class='error-container'><h3>⚠️ Error in message handler</h3>"
+            error_msg += f"<p><strong>Error:</strong> {str(e)}</p>"
+            error_msg += "</div>"
+            
+            # Send the error to the UI as a message
+            self.send({"type": "chat_message", "content": error_msg})
+            
+            # Create an error artifact with the full traceback
+            error_id = f"error_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}"
+            self.create_artifact(
+                error_id,
+                tb_text,
+                "",
+                f"Error: {str(e)}",
+                "error"
+            )
+            
+            # Log the error to the console as well
+            print(f"Error in message handler: {str(e)}")
+            print(tb_text)
 
     def _default_handle_message(self, widget, msg, buffers):
         # Default message handling logic, now supporting structured messages
