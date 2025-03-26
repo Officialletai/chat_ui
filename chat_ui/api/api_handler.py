@@ -1,8 +1,11 @@
 # chat_ui/api/api_handler.py
 from flask import Flask, request, jsonify
+from flask.logging import default_handler
 from functools import wraps
 import threading
 import logging
+import time
+from werkzeug.exceptions import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +15,8 @@ class APIHandler:
     through a simple HTTP API without modifying the core ChatWidget code.
     """
     
-    def __init__(self, chat_widget, host='127.0.0.1', port=5000, api_key=None):
+    def __init__(self, chat_widget, host='127.0.0.1', port=5000, api_key=None, 
+                 request_timeout=90):
         """
         Initialize the API handler.
         
@@ -26,14 +30,23 @@ class APIHandler:
             Port to bind the API server to
         api_key : str, optional
             API key for authentication. If None, authentication is disabled.
+        request_timeout : int, optional
+            Timeout in seconds for API requests
         """
         self.chat_widget = chat_widget
         self.host = host
         self.port = port
         self.api_key = api_key
+        self.request_timeout = request_timeout
         
         # Create Flask app
         self.app = Flask(__name__)
+        
+        # Configure logging
+        self.app.logger.setLevel(logging.INFO)
+        
+        # Register error handlers
+        self._register_error_handlers()
         
         # Register routes
         self._register_routes()
@@ -41,6 +54,49 @@ class APIHandler:
         # Server state
         self.server_thread = None
         self.is_running = False
+        self.start_time = None
+    
+    def _register_error_handlers(self):
+        """Register global error handlers for the Flask app."""
+        
+        @self.app.errorhandler(Exception)
+        def handle_exception(e):
+            """Handle any unhandled exception."""
+            # Log the error
+            self.app.logger.error(f"Unhandled exception: {str(e)}", exc_info=True)
+            
+            # Already handled HTTP exceptions
+            if isinstance(e, HTTPException):
+                return e
+                
+            # Return a generic 500 error for all other exceptions
+            response = jsonify({
+                'status': 'error',
+                'message': 'Internal server error',
+                'error': str(e)
+            })
+            response.status_code = 500
+            return response
+        
+        @self.app.errorhandler(404)
+        def handle_not_found(e):
+            """Handle 404 Not Found errors."""
+            response = jsonify({
+                'status': 'error',
+                'message': 'Endpoint not found'
+            })
+            response.status_code = 404
+            return response
+        
+        @self.app.errorhandler(405)
+        def handle_method_not_allowed(e):
+            """Handle 405 Method Not Allowed errors."""
+            response = jsonify({
+                'status': 'error',
+                'message': 'Method not allowed'
+            })
+            response.status_code = 405
+            return response
     
     def _require_api_key(self, f):
         """
@@ -55,15 +111,29 @@ class APIHandler:
             # Check API key
             api_key = request.headers.get('X-API-Key')
             if not api_key or api_key != self.api_key:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': 'Unauthorized'
-                }), 401
+                })
+                response.status_code = 401
+                return response
             return f(*args, **kwargs)
         return decorated
     
     def _register_routes(self):
         """Register all API routes with the Flask app."""
+        
+        # --- Health Check Endpoint ---
+        @self.app.route('/health', methods=['GET'])
+        def health_check():
+            """Health check endpoint to verify API is running."""
+            uptime = time.time() - self.start_time if self.start_time else 0
+            health_data = {
+                'status': 'up',
+                'uptime_seconds': uptime,
+                'version': '1.0.0'
+            }
+            return jsonify(health_data)
         
         # --- Messages Endpoint ---
         @self.app.route('/api/v1/messages', methods=['POST'])
@@ -71,10 +141,12 @@ class APIHandler:
         def send_message():
             data = request.json
             if not data or 'content' not in data:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': 'Missing required field: content'
-                }), 400
+                })
+                response.status_code = 400
+                return response
                 
             # Send message to widget
             self.chat_widget.send({
@@ -115,10 +187,12 @@ class APIHandler:
         def get_artifact(artifact_id):
             """Get a specific artifact by ID."""
             if artifact_id not in self.chat_widget.artifacts:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': f'Artifact not found: {artifact_id}'
-                }), 404
+                })
+                response.status_code = 404
+                return response
                 
             artifact = self.chat_widget.artifacts[artifact_id]
             
@@ -156,10 +230,12 @@ class APIHandler:
             required_fields = ['id', 'content']
             missing = [f for f in required_fields if f not in data]
             if missing:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': f'Missing required fields: {", ".join(missing)}'
-                }), 400
+                })
+                response.status_code = 400
+                return response
             
             # Get optional fields with defaults
             language = data.get('language', '')
@@ -182,27 +258,33 @@ class APIHandler:
                     'data': {'id': data['id']}
                 })
             except Exception as e:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': str(e)
-                }), 500
+                })
+                response.status_code = 500
+                return response
                 
         @self.app.route('/api/v1/artifacts/<artifact_id>', methods=['PUT'])
         @self._require_api_key
         def update_artifact(artifact_id):
             """Update an existing artifact."""
             if artifact_id not in self.chat_widget.artifacts:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': f'Artifact not found: {artifact_id}'
-                }), 404
+                })
+                response.status_code = 404
+                return response
                 
             data = request.json
             if not data:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': 'No update data provided'
-                }), 400
+                })
+                response.status_code = 400
+                return response
                 
             # Extract fields to update
             new_content = data.get('content')
@@ -226,15 +308,19 @@ class APIHandler:
                         'message': 'Artifact updated'
                     })
                 else:
-                    return jsonify({
+                    response = jsonify({
                         'status': 'error',
                         'message': 'Failed to update artifact'
-                    }), 500
+                    })
+                    response.status_code = 500
+                    return response
             except Exception as e:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': str(e)
-                }), 500
+                })
+                response.status_code = 500
+                return response
         
         # --- Thinking Endpoints ---
         @self.app.route('/api/v1/thinking', methods=['POST'])
@@ -243,10 +329,12 @@ class APIHandler:
             """Control the thinking process (start/add step/end)."""
             data = request.json
             if not data or 'action' not in data:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': 'Missing required field: action'
-                }), 400
+                })
+                response.status_code = 400
+                return response
                 
             action = data['action']
             
@@ -260,10 +348,12 @@ class APIHandler:
                     
                 elif action == 'add_step':
                     if 'title' not in data:
-                        return jsonify({
+                        response = jsonify({
                             'status': 'error',
                             'message': 'Missing required field: title'
-                        }), 400
+                        })
+                        response.status_code = 400
+                        return response
                         
                     title = data['title']
                     body = data.get('body', '')
@@ -282,15 +372,19 @@ class APIHandler:
                     })
                     
                 else:
-                    return jsonify({
+                    response = jsonify({
                         'status': 'error',
                         'message': f'Unknown action: {action}'
-                    }), 400
+                    })
+                    response.status_code = 400
+                    return response
             except Exception as e:
-                return jsonify({
+                response = jsonify({
                     'status': 'error',
                     'message': str(e)
-                }), 500
+                })
+                response.status_code = 500
+                return response
     
     def start(self, background=True):
         """
@@ -309,6 +403,9 @@ class APIHandler:
         if self.is_running:
             logger.warning("API server is already running")
             return False
+        
+        # Record start time for health endpoint
+        self.start_time = time.time()
             
         if background:
             def run_server():
@@ -317,7 +414,8 @@ class APIHandler:
                         host=self.host, 
                         port=self.port, 
                         debug=False, 
-                        use_reloader=False
+                        use_reloader=False,
+                        threaded=True
                     )
                 except Exception as e:
                     logger.error(f"Error starting API server: {e}")
@@ -332,7 +430,11 @@ class APIHandler:
             # Run in the main thread (blocking)
             try:
                 logger.info(f"Starting API server on http://{self.host}:{self.port}/")
-                self.app.run(host=self.host, port=self.port)
+                self.app.run(
+                    host=self.host, 
+                    port=self.port,
+                    threaded=True
+                )
                 self.is_running = True
                 return True
             except Exception as e:

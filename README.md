@@ -74,6 +74,111 @@ chat.end_thinking()
 chat.send({"type": "chat_message", "content": "Here's my final analysis..."})
 ```
 
+## HTTP API Interface
+
+The ChatWidget can be exposed via an HTTP API, allowing you to interact with it from external applications or services.
+
+### Setting Up the API Handler
+
+To use the API, you'll need to install the API dependencies:
+
+```bash
+pip install chat_ui[api]
+```
+
+Then you can set up the API handler in your Jupyter notebook:
+
+```python
+from chat_ui import ChatWidget
+from chat_ui import get_api_handler
+
+# Create the chat widget
+chat = ChatWidget()
+
+# Get the APIHandler class
+APIHandler = get_api_handler()
+
+# Create an API handler
+api = APIHandler(
+    chat_widget=chat,
+    host='127.0.0.1',
+    port=5000,
+    api_key='your_secure_api_key'  # Set to None to disable authentication
+)
+
+# Start the API server in the background
+api.start(background=True)
+
+print(f"API server running at {api.base_url}")
+```
+
+### API Endpoints
+
+The API provides access to all core ChatWidget functionality:
+
+#### Health Check
+
+- `GET /health` - Check if the API server is running
+
+#### Messages
+
+- `POST /api/v1/messages` - Send a message to the chat widget
+  - Required: `{"content": "Your message here"}`
+
+#### Artifacts
+
+- `GET /api/v1/artifacts` - Get a list of all artifacts
+- `GET /api/v1/artifacts/<artifact_id>` - Get a specific artifact
+- `POST /api/v1/artifacts` - Create a new artifact
+  - Required: `{"id": "artifact_id", "content": "artifact content"}`
+  - Optional: `"language"`, `"title"`, `"type"`
+- `PUT /api/v1/artifacts/<artifact_id>` - Update an existing artifact
+  - Optional: `"content"`, `"language"`, `"title"`, `"type"`
+
+#### Structured Thinking
+
+- `POST /api/v1/thinking` - Control the thinking process
+  - Start thinking: `{"action": "start"}`
+  - Add step: `{"action": "add_step", "title": "Step Title", "body": "Step Details"}`
+  - End thinking: `{"action": "end"}`
+
+### Authentication
+
+API requests are authenticated using the `X-API-Key` header. This header should contain the API key specified when creating the APIHandler instance.
+
+### Example API Usage
+
+Here's an example of using the API with Python's `requests` library:
+
+```python
+import requests
+
+base_url = "http://127.0.0.1:5000"
+headers = {"X-API-Key": "your_secure_api_key", "Content-Type": "application/json"}
+
+# Send a message
+response = requests.post(
+    f"{base_url}/api/v1/messages",
+    headers=headers,
+    json={"content": "Hello from the API!"}
+)
+print(response.json())
+
+# Create an artifact
+response = requests.post(
+    f"{base_url}/api/v1/artifacts",
+    headers=headers,
+    json={
+        "id": "api_artifact",
+        "content": "print('Hello from API')",
+        "language": "python",
+        "title": "API Created Artifact",
+        "type": "code"
+    }
+)
+print(response.json())
+```
+
 ## Custom Message Handling
 
 You can create custom message handlers to respond to specific commands:
@@ -117,6 +222,18 @@ The main class for creating interactive chat interfaces.
 - **start_thinking()**: Start a structured thinking process
 - **add_thinking_step(title, body)**: Add a thinking step with title and details
 - **end_thinking()**: End the structured thinking process
+
+### APIHandler
+
+HTTP API interface for exposing the ChatWidget functionality.
+
+#### Methods
+
+- **start(background=True)**: Start the API server (in background or blocking mode)
+
+#### Properties
+
+- **base_url**: Get the base URL for the API endpoints
 
 #### Artifact Types
 
@@ -228,4 +345,45 @@ def forecast_handler(widget, msg, buffers):
 
 # Set the custom handler
 chat.handle_message = forecast_handler
+```
+
+### API Integration Example
+
+This example demonstrates setting up the API and testing all endpoints:
+
+```python
+import requests
+import json
+import time
+import pandas as pd
+from chat_ui import ChatWidget
+from chat_ui import get_api_handler
+
+# Create the chat widget
+chat = ChatWidget()
+
+# Get API handler and start server
+APIHandler = get_api_handler()
+api = APIHandler(chat_widget=chat, api_key='test_key')
+api.start(background=True)
+
+# Create a sample artifact
+chat.create_artifact(
+    "test_code",
+    "def hello_world():\n    print('Hello, World!')",
+    "python",
+    "Test Python Function"
+)
+
+# Test API - Send a message
+response = requests.post(
+    f"http://{api.host}:{api.port}/api/v1/messages",
+    headers={"X-API-Key": "test_key", "Content-Type": "application/json"},
+    json={"content": "Hello from API!"}
+)
+print(f"Message API Response: {response.status_code}")
+print(response.json())
+
+# Display the widget to see results
+chat
 ```
