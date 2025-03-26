@@ -349,41 +349,198 @@ chat.handle_message = forecast_handler
 
 ### API Integration Example
 
-This example demonstrates setting up the API and testing all endpoints:
+This example demonstrates setting up the API and testing some endpoints:
 
 ```python
 import requests
 import json
-import time
 import pandas as pd
+import numpy as np
+import time
 from chat_ui import ChatWidget
 from chat_ui import get_api_handler
+from IPython.display import display
 
-# Create the chat widget
+# ---- 1. Setup the Chat Widget and API Handler ----
 chat = ChatWidget()
 
-# Get API handler and start server
+# Get the APIHandler class
 APIHandler = get_api_handler()
-api = APIHandler(chat_widget=chat, api_key='test_key')
+
+# Create an API handler with desired settings
+api = APIHandler(
+    chat_widget=chat,
+    host='127.0.0.1',
+    port=5000,
+    api_key='demo_api_key'  # You can set to None to disable authentication
+)
+
+# Start the API server in the background
 api.start(background=True)
+print(f"API server started at {api.base_url}")
 
-# Create a sample artifact
-chat.create_artifact(
-    "test_code",
-    "def hello_world():\n    print('Hello, World!')",
-    "python",
-    "Test Python Function"
-)
+# Wait a moment for the server to initialize
+time.sleep(1)
 
-# Test API - Send a message
-response = requests.post(
-    f"http://{api.host}:{api.port}/api/v1/messages",
-    headers={"X-API-Key": "test_key", "Content-Type": "application/json"},
-    json={"content": "Hello from API!"}
-)
-print(f"Message API Response: {response.status_code}")
-print(response.json())
+# Define helper functions for API requests
+def api_request(method, endpoint, data=None):
+    """Make an API request and handle errors consistently"""
+    url = f"http://{api.host}:{api.port}{endpoint}"
+    headers = {
+        "X-API-Key": "demo_api_key", 
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        if method.lower() == 'get':
+            response = requests.get(url, headers=headers)
+        elif method.lower() == 'post':
+            response = requests.post(url, headers=headers, json=data)
+        elif method.lower() == 'put':
+            response = requests.put(url, headers=headers, json=data)
+        else:
+            raise ValueError(f"Unsupported method: {method}")
+            
+        response.raise_for_status()  # Raise exception for HTTP errors
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"API Request Error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                print(f"Response: {e.response.json()}")
+            except:
+                print(f"Response: {e.response.text}")
+        return None
 
-# Display the widget to see results
-chat
+# ---- 2. Show the chat widget FIRST, before making API calls ----
+# This is important - display the widget before sending API requests
+display(chat)
+
+# ---- 3. Using the API to Send Messages and Create Artifacts ----
+
+# 3.1 Send a welcome message via API
+welcome_result = api_request('post', '/api/v1/messages', {
+    "content": "<h3>Welcome to the Chat UI API Demo!</h3><p>This message was sent through the API.</p>"
+})
+print("Welcome message sent:", "Success" if welcome_result else "Failed")
+
+# 3.2 Generate sample sales data for our demo
+dates = pd.date_range(start='2023-01-01', periods=6, freq='ME')  # Using 'ME' to avoid deprecation warning
+np.random.seed(42)  # For reproducible results
+sales_data = pd.DataFrame({
+    'Month': [d.strftime('%b %Y') for d in dates],
+    'Revenue': np.random.randint(100000, 500000, 6),
+    'Expenses': np.random.randint(50000, 200000, 6),
+    'Customers': np.random.randint(500, 2000, 6)
+})
+
+# Calculate profit metrics
+sales_data['Profit'] = sales_data['Revenue'] - sales_data['Expenses']
+sales_data['Margin'] = (sales_data['Profit'] / sales_data['Revenue'] * 100).round(1)
+
+# 3.3 Create a DataFrame artifact via API
+dataframe_result = api_request('post', '/api/v1/artifacts', {
+    "id": "sales_data",
+    "content": sales_data.to_dict('records'),  # Convert DataFrame to dict for JSON
+    "title": "Monthly Sales Data (H1 2023)",
+    "type": "dataframe"
+})
+print("DataFrame artifact created:", "Success" if dataframe_result else "Failed")
+
+# 3.4 Add a code artifact for sales analysis
+code_artifact = api_request('post', '/api/v1/artifacts', {
+    "id": "sales_analysis_code",
+    "content": """
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def analyze_sales(data):
+    \"\"\"Analyze monthly sales data and identify trends\"\"\"
+    # Calculate month-over-month growth
+    data['Revenue_Growth'] = data['Revenue'].pct_change() * 100
+    
+    # Identify best and worst performing months
+    best_month = data.loc[data['Profit'].idxmax()]
+    worst_month = data.loc[data['Profit'].idxmin()]
+    
+    return {
+        'average_margin': data['Margin'].mean(),
+        'total_profit': data['Profit'].sum(),
+        'best_month': best_month['Month'],
+        'worst_month': worst_month['Month']
+    }
+""",
+    "language": "python",
+    "title": "Sales Analysis Function",
+    "type": "code"
+})
+print("Code artifact created:", "Success" if code_artifact else "Failed")
+
+# ---- 4. Demonstrate Structured Thinking via API ----
+
+# 4.1 Start a thinking process
+thinking_start = api_request('post', '/api/v1/thinking', {
+    "action": "start"
+})
+print("Thinking started:", "Success" if thinking_start else "Failed")
+
+# 4.2 Add thinking steps - Wait between steps to simulate processing time
+api_request('post', '/api/v1/thinking', {
+    "action": "add_step",
+    "title": "Data Analysis",
+    "body": "First, I'll analyze the sales data to understand overall performance:\n\n"
+            "- 6 months of data from January to June 2023\n"
+            "- Revenue ranges from $100k to $500k per month\n"
+            "- Expenses typically account for 30-50% of revenue"
+})
+time.sleep(0.8)
+
+api_request('post', '/api/v1/thinking', {
+    "action": "add_step",
+    "title": "Profit Analysis",
+    "body": "Looking at profitability metrics:\n\n"
+            "- Average profit margin is approximately 60%\n"
+            "- Total profit for H1 2023 is around $1.2M\n"
+            "- Month-over-month profit growth shows increasing trend"
+})
+time.sleep(1)
+
+api_request('post', '/api/v1/thinking', {
+    "action": "add_step",
+    "title": "Identifying Patterns",
+    "body": "Key patterns in the data:\n\n"
+            "- Revenue and customer count are strongly correlated (r=0.82)\n"
+            "- March shows the highest profit margin at 68%\n"
+            "- January had the lowest performance overall"
+})
+time.sleep(1.2)
+
+# 4.3 End the thinking process
+thinking_end = api_request('post', '/api/v1/thinking', {
+    "action": "end"
+})
+print("Thinking completed:", "Success" if thinking_end else "Failed")
+
+# ---- 5. Send Analysis Summary Message ----
+summary_result = api_request('post', '/api/v1/messages', {
+    "content": """
+    <h3>H1 2023 Sales Analysis</h3>
+    <p>After analyzing the first half sales data, here are the key findings:</p>
+    <ul>
+        <li>Overall strong performance with an average margin of 60%</li>
+        <li>March was our best-performing month</li>
+        <li>Total profit for H1 reached approximately $1.2M</li>
+        <li>Customer count and revenue show strong positive correlation</li>
+    </ul>
+    <p>You can find the detailed data and analysis in the artifacts panel.</p>
+    """
+})
+print("Summary message sent:", "Success" if summary_result else "Failed")
+
+# ---- 6. Retrieve Artifacts List to Verify ----
+artifacts = api_request('get', '/api/v1/artifacts')
+if artifacts and 'data' in artifacts:
+    print("\nArtifacts created via API:")
+    for artifact_id, info in artifacts['data'].items():
+        print(f"- {info['title']} (ID: {artifact_id}, Type: {info['type']})")
 ```
