@@ -12,6 +12,7 @@ dependencies = [
     "pandas",
     "markdown"
 ]
+readme = "README.md"
 
 # Optional API dependencies
 [project.optional-dependencies]
