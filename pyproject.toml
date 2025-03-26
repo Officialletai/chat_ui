@@ -12,6 +12,13 @@ dependencies = [
     "pandas",
     "markdown"
 ]
+
+# Optional API dependencies
+[project.optional-dependencies]
+api = [
+    "flask>=3.0.0"
+]
+
 # Include the Python package and the bundled static assets.
 [tool.hatch.build.targets.wheel]
 include = [
