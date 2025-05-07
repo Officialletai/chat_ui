@@ -5,16 +5,19 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chat_ui"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
     "anywidget",
     "traitlets",
     "pandas",
     "markdown"
 ]
+
+readme = "README.md"
+
 # Include the Python package and the bundled static assets.
 [tool.hatch.build.targets.wheel]
 include = [
-    "chat_ui/**",
-    "chat_ui/static/**"
+    "src/**",
+    "src/static/**"
 ]
