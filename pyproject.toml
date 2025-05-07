@@ -18,6 +18,6 @@ readme = "README.md"
 # Include the Python package and the bundled static assets.
 [tool.hatch.build.targets.wheel]
 include = [
-    "src/**",
-    "src/static/**"
+    "chat_ui/**",
+    "chat_ui/static/**"
 ]
