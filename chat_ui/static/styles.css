@@ -1,0 +1,946 @@
+/* chat_ui/static/styles.css */
+
+:root {
+    /* Light theme variables (default) */
+    --placeholder-color: #999999;
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --text-color-light: #666666; /* For secondary text */
+    --chat-bg: #f9f9f9;
+    --user-message-bg: #DCF8C6;
+    --other-message-bg: #E8E8E8;
+    --header-bg: #f0f0f0;
+    --input-bg: #ffffff;
+    --input-border: #ccc;
+    --button-bg: #4CAF50;
+    --button-text: #ffffff;
+    --panel-bg: #f5f5f5;
+    --artifact-bg: #ffffff;
+    --artifact-header-bg: #f0f0f0;
+    --artifact-border: #ddd;
+    --code-bg: #f8f8f8;
+    --code-text: #333333;
+    --resize-handle-bg: #ddd;
+    --resize-handle-hover: #2196F3;
+    --nav-button-bg: #2196F3;
+    --nav-button-text: #ffffff;
+    --counter-text: #666;
+    --dataframe-header-bg: #f0f0f0;
+    --dataframe-border: #ddd;
+    --dataframe-stripe: #f8f8f8;
+    --error-bg: #fff6f6;
+    --error-border: #ffcdd2;
+    --error-text: #d32f2f;
+    --badge-bg: #e0e0e0;
+    --badge-text: #555;
+    --type-badge-bg: #2196F3;
+    --type-badge-text: #ffffff;
+
+    /* Thinking UI Variables - Light */
+    --thinking-container-bg: #f5f8fb;
+    --thinking-header-bg: #f0f4f8;
+    --thinking-header-border: #e6ebf1;
+    --thinking-label-text: #666;
+    --thinking-step-bg: #ffffff;
+    --thinking-step-border: #4CAF50; /* Accent color */
+    --thinking-step-shadow: rgba(0, 0, 0, 0.05);
+    --thinking-step-title-text: #333;
+    --thinking-step-body-text: #555;
+    --thinking-step-code-bg: #f5f5f5;
+    --thinking-step-divider: #e9ecef;
+}
+
+/* Dark theme variables */
+[data-theme="dark"] {
+    --placeholder-color: #aaaaaa;
+    --bg-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-color-light: #cccccc; /* For secondary text */
+    --chat-bg: #2d2d2d;
+    --user-message-bg: #3a6e40;
+    --other-message-bg: #404040;
+    --header-bg: #333333;
+    --input-bg: #404040;
+    --input-border: #555555;
+    --button-bg: #388e3c;
+    --button-text: #ffffff;
+    --panel-bg: #2d2d2d;
+    --artifact-bg: #333333;
+    --artifact-header-bg: #404040;
+    --artifact-border: #555555;
+    --code-bg: #282c34; /* Common dark code background */
+    --code-text: #abb2bf; /* Common light code text on dark bg */
+    --resize-handle-bg: #555555;
+    --resize-handle-hover: #0d47a1;
+    --nav-button-bg: #0d47a1;
+    --nav-button-text: #ffffff;
+    --counter-text: #cccccc;
+    --dataframe-header-bg: #404040;
+    --dataframe-border: #555555;
+    --dataframe-stripe: #3a3a3a;
+    --error-bg: #4a2f2f;
+    --error-border: #d32f2f;
+    --error-text: #ff6b6b;
+    --badge-bg: #505050;
+    --badge-text: #cccccc;
+    --type-badge-bg: #0d47a1;
+    --type-badge-text: #ffffff;
+
+    /* Thinking UI Variables - Dark */
+    --thinking-container-bg: #2a2a30; /* Darker panel */
+    --thinking-header-bg: #333337;   /* Slightly lighter than container */
+    --thinking-header-border: #404045;
+    --thinking-label-text: #bbbbbb;
+    --thinking-step-bg: #38383e;     /* Dark step background */
+    --thinking-step-border: #388e3c; /* Dark theme button green */
+    --thinking-step-shadow: rgba(0, 0, 0, 0.2);
+    --thinking-step-title-text: #e0e0e0;
+    --thinking-step-body-text: #c0c0c0;
+    --thinking-step-code-bg: #2c2c32; /* Darker code within step */
+    --thinking-step-divider: #44444a;
+}
+
+/* ============================================= */
+/* ========== MAIN LAYOUT COMPONENTS =========== */
+/* ============================================= */
+.chat-widget-container {
+    display: flex;
+    height: 450px; /* Default height, can be overridden by JS */
+    width: 100%;
+    border: 1px solid var(--artifact-border);
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* ============================================= */
+/* =============== CHAT STYLES ================= */
+/* ============================================= */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.1s ease;
+    /* border: none; (removed from .chat-widget-container .chat-container) */
+    border-radius: 0;
+    background-color: var(--bg-color); /* Ensured for chat-container itself */
+    height: 100%; /* Takes full height of its parent in flex */
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--artifact-border);
+    color: var(--text-color);
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: var(--chat-bg);
+}
+
+.message {
+    margin: 5px 0;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 70%;
+    word-wrap: break-word;
+    color: var(--text-color); /* Default message text color */
+}
+.user-message {
+    background-color: var(--user-message-bg);
+    margin-left: auto;
+    color: #000; /* Text color for user messages often looks better dark on light green */
+}
+[data-theme="dark"] .user-message {
+    color: var(--button-text); /* Light text on dark green for dark mode */
+}
+
+.other-message {
+    background-color: var(--other-message-bg);
+    color: var(--text-color);
+}
+
+.input-container {
+    border-top: 1px solid var(--artifact-border);
+    padding: 10px;
+    background-color: var(--bg-color);
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+}
+
+#message-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+#message-input::placeholder {
+    color: var(--placeholder-color);
+    opacity: 1; /* Firefox */
+}
+
+#message-input::-webkit-input-placeholder {
+    color: var(--placeholder-color);
+}
+
+#message-input::-moz-placeholder {
+    color: var(--placeholder-color);
+    opacity: 1;
+}
+
+#message-input:-ms-input-placeholder {
+    color: var(--placeholder-color);
+}
+
+#message-input:-moz-placeholder {
+    color: var(--placeholder-color);
+}
+
+#send-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+/* Tables within messages (e.g. small utility tables, not dataframes) */
+.message table {
+    border-collapse: collapse;
+    margin: 5px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    width: 100%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    background-color: var(--artifact-bg); /* Table background */
+}
+.message td, .message th {
+    padding: 8px 12px;
+    border: 1px solid var(--artifact-border);
+    color: var(--text-color);
+}
+.message th {
+    background-color: var(--header-bg); /* Table header bg */
+}
+.message tr:nth-child(even) {
+    background-color: var(--chat-bg); /* Stripe color for tables in messages */
+}
+
+
+/* ============================================= */
+/* ============= ARTIFACTS PANEL =============== */
+/* ============================================= */
+.artifacts-panel {
+    width: 350px; /* Default width, can be overridden by JS */
+    border-left: 1px solid var(--artifact-border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.1s ease;
+    background-color: var(--panel-bg);
+    color: var(--text-color);
+}
+
+.artifacts-header {
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--artifact-border);
+    background-color: var(--artifact-header-bg); /* Already var, good */
+    color: var(--text-color);
+}
+
+/* Navigation for single artifact display */
+.artifacts-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+    background-color: var(--header-bg); /* Consistent with other headers */
+    border-top: 1px solid var(--artifact-border);
+    border-bottom: 1px solid var(--artifact-border); /* Added for separation */
+}
+
+.nav-button {
+    background-color: var(--nav-button-bg);
+    color: var(--nav-button-text);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: none;
+}
+
+.nav-button:hover:not(:disabled) {
+    background-color: var(--resize-handle-hover); /* Using resize handle hover as it's a similar interactive element */
+}
+
+.nav-button:disabled {
+    background-color: var(--badge-bg); /* Consistent disabled look */
+    color: var(--badge-text);
+    cursor: not-allowed;
+}
+
+.artifact-counter {
+    margin: 0 10px;
+    font-size: 14px;
+    color: var(--counter-text);
+}
+
+/* Container for displaying the current artifact or list */
+.artifacts-display { /* Used when navigating single artifacts */
+    flex: 1;
+    overflow-y: auto; /* Allows scrolling if content overflows */
+    padding: 10px;
+    background-color: var(--panel-bg); /* Match panel bg */
+}
+.artifacts-list { /* Original list, hidden when navigation is active */
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: var(--panel-bg); /* Match panel bg */
+    /* display: none; /* Controlled by JS */
+}
+
+
+.artifact {
+    margin-bottom: 15px;
+    border: 1px solid var(--artifact-border);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer; /* Still clickable if in a list */
+    transition: all 0.2s ease;
+    background-color: var(--artifact-bg);
+}
+.artifacts-display .artifact { /* When single artifact is shown */
+    margin-bottom: 0;
+    height: 100%; /* Take full available height in display mode */
+    display: flex;
+    flex-direction: column;
+    cursor: default; /* Not clickable when it's the main displayed one */
+}
+
+.artifact:hover {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Light theme shadow */
+}
+[data-theme="dark"] .artifact:hover {
+    box-shadow: 0 2px 5px rgba(255,255,255,0.05); /* Dark theme shadow */
+}
+
+.artifact-header {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--artifact-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--artifact-header-bg);
+    color: var(--text-color);
+}
+
+.artifact-title {
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+.artifact-info {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.artifact-language, .artifact-type {
+    padding: 2px 6px;
+    font-size: 0.75em;
+    border-radius: 10px;
+}
+
+.artifact-language {
+    background-color: var(--badge-bg);
+    color: var(--badge-text);
+}
+
+.artifact-type {
+    background-color: var(--type-badge-bg);
+    color: var(--type-badge-text);
+}
+
+.current-artifact { /* When selected from a list */
+    border: 2px solid var(--button-bg);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--button-bg) 30%, transparent);
+}
+
+.no-artifacts {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color-light);
+    font-style: italic;
+}
+
+.artifacts-panel.hidden {
+    display: none;
+}
+.artifacts-panel.hidden + .chat-container { /* If JS adds .hidden to panel */
+    width: 100%;
+}
+
+/* Content within an artifact */
+.artifact-content-container {
+    padding: 10px;
+    font-size: 13px;
+    overflow: auto; /* Scroll for content taller than container */
+    flex: 1; /* Allows content to fill space in .artifacts-display .artifact */
+    background-color: var(--artifact-bg); /* Ensures content area has artifact bg */
+    color: var(--text-color);
+}
+
+/* Generic code block style within artifacts (not specific to SQL artifact type) */
+.artifact-content { /* Used for simple code snippets */
+    margin: 0;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    max-height: 200px; /* For when it's part of a list */
+    overflow-y: auto;
+    background-color: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 3px; /* Added for better look */
+}
+.artifacts-display .artifact-content {
+    max-height: none; /* Allow full scroll when single artifact */
+}
+
+
+/* --- DataFrame Artifact --- */
+.artifact-type-dataframe .artifact-type { background-color: #4CAF50; }
+
+.dataframe-container {
+    max-height: 250px; /* For list view */
+    overflow: auto;
+    border: 1px solid var(--dataframe-border);
+    margin-top: 8px;
+    background-color: var(--artifact-bg); /* Ensure background is set */
+}
+.artifacts-display .dataframe-container {
+    max-height: none; /* Full scroll in single display */
+}
+
+.dataframe-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.85em;
+    color: var(--text-color);
+}
+
+.dataframe-table th {
+    font-weight: bold;
+    text-align: left;
+    padding: 6px 8px;
+    border: 1px solid var(--dataframe-border);
+    position: sticky;
+    top: 0;
+    background-color: var(--dataframe-header-bg);
+    color: var(--text-color);
+}
+
+.dataframe-table td {
+    padding: 5px 8px;
+    border: 1px solid var(--dataframe-border);
+}
+
+.dataframe-table tr:nth-child(even) {
+    background-color: var(--dataframe-stripe);
+}
+
+.dataframe-shape {
+    font-size: 0.85em;
+    color: var(--text-color-light);
+    margin-bottom: 5px;
+}
+
+/* --- SQL Artifact --- */
+.artifact-type-sql_result .artifact-type { background-color: #FF9800; }
+.artifact-type-sql_error .artifact-type { background-color: #F44336; }
+
+.sql-query-section {
+    border-bottom: 1px solid var(--artifact-border);
+    margin-bottom: 8px;
+    padding-bottom: 8px; /* Add some space below the query */
+}
+
+/* Style for the <pre><code> block containing SQL */
+.sql-query {
+    margin: 0;
+    padding: 0; /* Padding will be on the code element */
+    background-color: var(--code-bg);
+    border-radius: 5px;
+    overflow: auto; /* Scroll for long lines */
+}
+
+.sql-query code, .hljs { /* Target both raw code and highlighted code */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px;
+    display: block;
+    tab-size: 4;
+    color: var(--code-text);
+    background: var(--code-bg) !important; /* Important to override HLJS inline styles */
+}
+
+.result-header, .error-header { /* Headers for SQL results/errors within artifact */
+    font-weight: bold;
+    padding: 5px 0;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+.sql-results-section {
+    margin-top: 10px;
+}
+.sql-error-section {
+    margin-top: 10px;
+}
+.error-header { /* Specific color for error headers */
+    color: var(--error-text);
+}
+
+/* For error messages within SQL artifacts */
+.error-message { /* This is for the pre/code block containing error text */
+    margin: 0;
+    padding: 8px;
+    font-family: monospace;
+    border: 1px solid var(--error-border);
+    border-radius: 3px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    background-color: var(--error-bg);
+    color: var(--error-text);
+}
+
+/* --- Visualization Artifact --- */
+.artifact-type-visualization .artifact-type { background-color: #9C27B0; }
+
+.visualization-container {
+    height: 100%;
+    min-height: 150px; /* Minimum height in list view */
+    overflow: auto;
+    background-color: var(--artifact-bg); /* Ensure background for plot libs */
+}
+.artifacts-display .visualization-container {
+     min-height: 300px; /* Larger min height when focused */
+}
+
+/* --- Error Artifact --- */
+.artifact-type-error .artifact-type {
+    background-color: var(--error-text); /* Match error text color for badge */
+    color: var(--button-text); /* Light text on dark red */
+}
+.artifact-type-error .artifact-header { /* Header of an error artifact */
+    background-color: var(--error-bg);
+    border-bottom-color: var(--error-border);
+    color: var(--error-text);
+}
+.artifact-type-error .artifact-content { /* Content of an error artifact */
+    background-color: var(--error-bg);
+    color: var(--text-color); /* Regular text color for readability on error bg */
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    border-radius: 0; /* No extra radius needed here */
+    padding: 10px;
+}
+[data-theme="dark"] .artifact-type-error .artifact-content {
+    color: var(--text-color); /* Ensure dark theme text color is used */
+}
+
+
+/* ============================================= */
+/* ============= THINKING UI =================== */
+/* ============================================= */
+.thinking-container {
+    width: 100%;
+    border-radius: 8px;
+    background-color: var(--thinking-container-bg);
+    box-shadow: 0 1px 3px var(--thinking-step-shadow);
+    overflow: hidden;
+    transition: all 0.2s ease;
+    margin: 10px 0; /* Add some margin when in chat flow */
+}
+
+.thinking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--thinking-header-bg);
+    border-bottom: 1px solid var(--thinking-header-border);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.thinking-header-left {
+    display: flex;
+    align-items: center;
+}
+
+.thinking-indicator {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.thinking-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--thinking-label-text); /* Use label text for dots */
+    margin-right: 3px;
+    animation: thinking-pulse 1.4s infinite ease-in-out;
+}
+.thinking-dot:nth-child(1) { animation-delay: 0s; }
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking-pulse {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+.thinking-label {
+    font-weight: 500;
+    color: var(--thinking-label-text);
+    font-size: 13px;
+}
+
+.thinking-toggle { display: flex; align-items: center; }
+.thinking-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--thinking-label-text);
+    transition: none;
+}
+.thinking-toggle-btn:hover {
+    background-color: color-mix(in srgb, var(--thinking-label-text) 10%, transparent);
+    color: var(--text-color);
+}
+.thinking-toggle-icon { font-size: 10px; line-height: 1; }
+
+.thinking-body {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+.thinking-body.collapsed {
+    max-height: 60px; /* Adjust as needed for compact view */
+    overflow: hidden;
+}
+.thinking-body.collapsed .thinking-step-body { display: none; }
+.thinking-body.collapsed .thinking-step:not(.latest-step) { display: none; }
+.thinking-body.collapsed .latest-step {
+    padding: 6px 10px;
+    margin-bottom: 0;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+.thinking-body.collapsed .latest-step .thinking-step-title::after {
+    content: " ...";
+    color: var(--thinking-label-text);
+    font-weight: normal;
+}
+
+.thinking-steps { padding: 8px 12px; }
+.thinking-step {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background-color: var(--thinking-step-bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--thinking-step-border);
+    box-shadow: 0 1px 2px var(--thinking-step-shadow);
+    animation: thinking-step-appear 0.3s ease;
+}
+.thinking-step.latest-step {
+    border-left-color: var(--thinking-step-border); /* Ensure it uses the variable */
+    /* background-color: var(--thinking-step-bg); Already set */
+}
+@keyframes thinking-step-appear {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.thinking-step-title {
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--thinking-step-title-text);
+    margin-bottom: 6px;
+}
+.thinking-step-body {
+    color: var(--thinking-step-body-text);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+.thinking-step-body ul,
+.thinking-step-body ol {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-left: 20px;
+}
+.thinking-step-body code {
+    font-family: monospace;
+    background-color: var(--thinking-step-code-bg);
+    color: var(--code-text); /* Use general code text for contrast */
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+.thinking-step-body pre {
+    background-color: var(--thinking-step-code-bg);
+    color: var(--code-text);
+    padding: 8px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.thinking-body:not(.collapsed) .thinking-step:not(:last-child) {
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--thinking-step-divider);
+    padding-bottom: 12px;
+}
+
+.thinking-body.collapsed .thinking-step.latest-step {
+    display: block !important; /* Ensure visibility */
+    margin-bottom: 0;
+}
+.thinking-body.collapsed .thinking-step.latest-step .thinking-step-title {
+    display: block !important; /* Ensure visibility */
+    padding: 4px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+/* Thinking Result (after completion, might reuse .thinking-container structure) */
+.thinking-result { /* Essentially a styled .thinking-container */
+    /* padding: 0; (already handled by container) */
+    /* border-radius: 8px; (already handled by container) */
+    /* overflow: hidden; (already handled by container) */
+    /* background-color: var(--thinking-container-bg); (already handled by container) */
+    /* box-shadow: 0 1px 3px var(--thinking-step-shadow); (already handled by container) */
+}
+.thinking-result .thinking-toggle-btn {
+    cursor: pointer;
+    opacity: 1;
+}
+.thinking-result-header { /* Similar to .thinking-header */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    font-weight: 500;
+    background-color: var(--thinking-header-bg);
+    color: var(--thinking-label-text); /* Consistent with label */
+    font-size: 14px;
+    border-bottom: 1px solid var(--thinking-header-border);
+}
+.thinking-result .thinking-body.collapsed {
+    min-height: 0; /* Override if different from active thinking */
+    /* max-height: 60px; (already set) */
+    transition: all 0.3s ease;
+}
+
+
+/* ============================================= */
+/* ============= ERROR MESSAGE STYLES ========== */
+/* ============================================= */
+/* General error message container (e.g., for Python tracebacks in chat) */
+.error-container {
+    background-color: var(--error-bg);
+    border-left: 4px solid var(--error-text); /* Use error-text for border too */
+    padding: 10px 15px;
+    margin: 10px 0; /* If used directly in chat history */
+    border-radius: 4px;
+    color: var(--text-color); /* Base text color for readability */
+}
+.error-container h3 {
+    color: var(--error-text);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+.error-container p {
+    margin: 5px 0;
+    /* color: var(--text-color); Inherited */
+}
+.error-container pre, .error-container code { /* For tracebacks */
+    background-color: color-mix(in srgb, var(--error-bg) 85%, var(--bg-color));
+    color: var(--error-text);
+    padding: 5px;
+    border-radius: 3px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+
+/* ============================================= */
+/* ============ THEME TOGGLE SWITCH ============ */
+/* ============================================= */
+.theme-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* Pushes it to the right in chat-header */
+}
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    margin-right: 8px;
+}
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.theme-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc; /* Default off state */
+    transition: .4s;
+}
+.theme-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+input:checked + .theme-slider {
+    background-color: var(--button-bg); /* Uses theme's button color for "on" */
+}
+input:focus + .theme-slider {
+    box-shadow: 0 0 1px var(--button-bg);
+}
+input:checked + .theme-slider:before {
+    transform: translateX(26px);
+}
+.theme-slider.round { border-radius: 24px; }
+.theme-slider.round:before { border-radius: 50%; }
+.theme-label {
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+/* ============================================= */
+/* ============== RESIZE HANDLE ================ */
+/* ============================================= */
+.resize-handle {
+    width: 5px;
+    background-color: var(--resize-handle-bg);
+    cursor: col-resize;
+    transition: none;
+    position: relative; /* For pseudo-elements */
+}
+.resize-handle:hover,
+.resizing .resize-handle {
+    background-color: var(--resize-handle-hover);
+}
+.resize-handle::after,
+.resize-handle::before {
+    content: '';
+    position: absolute;
+    height: 30px;
+    width: 1px;
+    background-color: color-mix(in srgb, var(--resize-handle-bg) 60%, black);
+    top: 50%;
+    transform: translateY(-50%);
+}
+.resize-handle::after { left: 3px; }
+.resize-handle::before { left: 1px; }
+
+.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+.resizing * {
+    user-select: none !important;
+}
+
+/* ============================================= */
+/* ============= RESPONSIVE DESIGN ============= */
+/* ============================================= */
+@media (max-width: 768px) {
+    .chat-widget-container {
+        flex-direction: column;
+        height: auto; /* Allow content to determine height */
+        min-height: 650px; /* Or a suitable min-height */
+    }
+
+    .artifacts-panel {
+        width: 100% !important; /* Override inline style */
+        height: 300px; /* Or flex-basis, or min-height */
+        border-left: none;
+        border-top: 1px solid var(--artifact-border);
+        order: 2; /* Artifacts below chat */
+    }
+
+    .chat-container {
+        width: 100% !important; /* Override inline style */
+        order: 1; /* Chat above artifacts */
+        /* height is implicitly flex:1 of its new parent */
+    }
+
+    .resize-handle { /* Horizontal resize handle for mobile */
+        width: 100%;
+        height: 5px;
+        cursor: row-resize;
+    }
+    .resize-handle::after,
+    .resize-handle::before { /* Adjust gripper lines for horizontal handle */
+        width: 30px;
+        height: 1px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .resize-handle::after { top: calc(50% + 2px); } /* Offset them slightly */
+    .resize-handle::before { top: calc(50% - 2px); }
+
+    .resizing { cursor: row-resize; } /* For mobile */
+
+    /* Artifact Navigation on mobile */
+    .artifacts-navigation { padding: 5px; }
+    .nav-button { padding: 4px 8px; font-size: 12px; }
+    .artifact-counter { font-size: 12px; }
+}

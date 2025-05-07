@@ -23,6 +23,9 @@ class ChatWidget(anywidget.AnyWidget):
     
     # Add traitlet for tracking extended thinking state
     thinking_active = traitlets.Bool(False).tag(sync=True)
+    
+    # Add a traitlet for panel width
+    artifact_panel_width = traitlets.Int(350).tag(sync=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -34,6 +37,7 @@ class ChatWidget(anywidget.AnyWidget):
         self.artifacts = {}
         self.current_artifact_id = ""
         self.thinking_active = False
+        self.artifact_panel_width = 350  # Default width
 
     def _handle_message_wrapper(self, widget, msg, buffers):
         """Wrapper that catches and displays errors from custom message handlers"""
@@ -295,3 +299,7 @@ class ChatWidget(anywidget.AnyWidget):
         # Notify frontend of artifact change
         self.send({"type": "artifact_update", "artifact": artifact})
         return True
+    
+    def _handle_resize(self, width):
+        """Update the saved panel width."""
+        self.artifact_panel_width = width

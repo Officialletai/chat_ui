@@ -18,34 +18,108 @@ export default {
       this.updateThinkingUI(model);
     });
 
+    // Load Highlight.js dynamically for syntax highlighting
+    this.loadSyntaxHighlighter();
+
     return () => {};
+  },
+  
+  loadSyntaxHighlighter() {
+    // Create link element for CSS with an ID for easy replacement
+    const highlightCSS = document.createElement('link');
+    highlightCSS.rel = 'stylesheet';
+    highlightCSS.id = 'highlight-theme-css';
+    // Start with light theme by default
+    highlightCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css';
+    document.head.appendChild(highlightCSS);
+    
+    // Create script element for JavaScript
+    const highlightJS = document.createElement('script');
+    highlightJS.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+    document.head.appendChild(highlightJS);
+    
+    // Create additional script for SQL language
+    const sqlJS = document.createElement('script');
+    sqlJS.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/sql.min.js';
+    
+    // Initialize highlighting after both scripts are loaded
+    highlightJS.onload = () => {
+      document.head.appendChild(sqlJS);
+    };
+    
+    sqlJS.onload = () => {
+      // After SQL language support is loaded, initialize any existing code blocks
+      if (window.hljs) {
+        window.hljs.highlightAll();
+      }
+    };
+  },
+
+  toggleTheme(isDarkTheme) {
+    const root = document.documentElement;
+    const themeCSS = document.getElementById('highlight-theme-css');
+    
+    if (isDarkTheme) {
+      // Apply dark theme
+      root.setAttribute('data-theme', 'dark');
+      // Change highlight.js theme to a dark one
+      if (themeCSS) {
+        themeCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/vs2015.min.css';
+      }
+    } else {
+      // Apply light theme
+      root.setAttribute('data-theme', 'light');
+      // Change highlight.js theme to a light one
+      if (themeCSS) {
+        themeCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css';
+      }
+    }
+    
+    // Re-highlight all code blocks with new theme
+    // This ensures all SQL artifacts get updated
+    if (window.hljs) {
+      setTimeout(() => {
+        window.hljs.highlightAll();
+      }, 100); // Small delay to ensure CSS has updated
+    }
   },
   
   render({ model, el }) {
     // Create widget with chat container, thinking UI, and initially hidden artifacts panel
     el.innerHTML = `
-      <div class="chat-widget-container">
-        <div class="chat-container">
-          <div class="chat-history"></div>
-          <div class="input-container">
-            <div class="input-row">
-              <input type="text" id="message-input" placeholder="Type your message...">
-              <button id="send-button">Send</button>
-            </div>
+    <div class="chat-widget-container">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-title">Chat UI</div>
+          <div class="theme-toggle-container">
+            <label class="theme-switch" for="theme-checkbox">
+              <input type="checkbox" id="theme-checkbox">
+              <span class="theme-slider round"></span>
+            </label>
+            <span class="theme-label">Dark Mode</span>
           </div>
         </div>
-        <div class="artifacts-panel hidden">
-          <div class="artifacts-header">Data Artifacts</div>
-          <div class="artifacts-display"></div>
-          <div class="artifacts-navigation">
-            <button class="nav-button prev-button" disabled>&larr;</button>
-            <span class="artifact-counter">0 of 0</span>
-            <button class="nav-button next-button" disabled>&rarr;</button>
+        <div class="chat-history"></div>
+        <div class="input-container">
+          <div class="input-row">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
           </div>
-          <div class="artifacts-list"></div>
         </div>
       </div>
-    `;
+      <div class="resize-handle" id="resize-handle"></div>
+      <div class="artifacts-panel hidden">
+        <div class="artifacts-header">Data Artifacts</div>
+        <div class="artifacts-display"></div>
+        <div class="artifacts-navigation">
+          <button class="nav-button prev-button" disabled>&larr;</button>
+          <span class="artifact-counter">0 of 0</span>
+          <button class="nav-button next-button" disabled>&rarr;</button>
+        </div>
+        <div class="artifacts-list"></div>
+      </div>
+    </div>
+  `;
     
     // Store reference to this for use in event handlers
     const self = this;
@@ -58,6 +132,24 @@ export default {
     this.thinkingSteps = [];
     this.currentThinkingMessage = null;
     this.thinkingExpanded = false;
+
+    // Initialize resize state variables
+    this.panelWidth = 350; // Default panel width 
+    this.isDragging = false;
+
+    const themeToggle = el.querySelector('#theme-checkbox');
+    themeToggle.addEventListener('change', (e) => {
+      this.toggleTheme(e.target.checked);
+    });
+
+    const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDarkScheme) {
+      themeToggle.checked = true;
+      this.toggleTheme(true);
+    } else {
+      themeToggle.checked = false;
+      this.toggleTheme(false);
+    }
     
     // Function to show a specific artifact by index
     this.showArtifactByIndex = function(model, index) {
@@ -113,9 +205,16 @@ export default {
       if (this.artifactIds.length > 0) {
         // Show the artifacts panel if it was hidden
         artifactsPanel.classList.remove('hidden');
+        
+        // Apply saved width when showing artifacts panel
+        artifactsPanel.style.width = `${this.panelWidth}px`;
+        chatContainer.style.width = `calc(100% - ${this.panelWidth}px)`;
       } else {
         // Hide the artifacts panel if there are no artifacts
         artifactsPanel.classList.add('hidden');
+        
+        // Reset chat container width
+        chatContainer.style.width = '100%';
         return;
       }
       
@@ -161,11 +260,18 @@ export default {
                   <div class="dataframe-container">${artifact.content.html || 'No data available'}</div>
                 </div>
               `;
+            } else if (artifactType === 'sql') {
+              // Just the SQL query
+              contentHTML = `
+                <div class="sql-query-section">
+                  <pre class="sql-query"><code class="language-sql">${this.escapeHTML(typeof artifact.content === 'string' ? artifact.content : JSON.stringify(artifact.content, null, 2))}</code></pre>
+                </div>
+              `;
             } else if (artifactType === 'sql_result') {
               // Render SQL with results
               contentHTML = `
                 <div class="sql-query-section">
-                  <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query)}</code></pre>
+                  <pre class="sql-query"><code class="language-sql">${this.escapeHTML(artifact.content.query)}</code></pre>
                 </div>
                 <div class="sql-results-section">
                   <div class="result-header">Results (${artifact.content.result.shape ? `${artifact.content.result.shape[0]} rows` : '0 rows'})</div>
@@ -176,18 +282,11 @@ export default {
               // Render SQL with error
               contentHTML = `
                 <div class="sql-query-section">
-                  <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query)}</code></pre>
+                  <pre class="sql-query"><code class="language-sql">${this.escapeHTML(artifact.content.query)}</code></pre>
                 </div>
                 <div class="sql-error-section">
                   <div class="error-header">Error</div>
                   <pre class="error-message">${this.escapeHTML(artifact.content.error)}</pre>
-                </div>
-              `;
-            } else if (artifactType === 'sql') {
-              // Just the SQL query
-              contentHTML = `
-                <div class="sql-query-section">
-                  <pre class="sql-query"><code>${this.escapeHTML(artifact.content.query || artifact.content)}</code></pre>
                 </div>
               `;
             } else if (artifactType === 'visualization') {
@@ -199,7 +298,7 @@ export default {
               `;
             } else {
               // Default code artifact
-              contentHTML = `<pre class="artifact-content"><code>${this.escapeHTML(
+              contentHTML = `<pre class="artifact-content">"><code class="language-sql">${this.escapeHTML(
                 typeof artifact.content === 'string' ? artifact.content : JSON.stringify(artifact.content, null, 2)
               )}</code></pre>`;
             }
@@ -227,6 +326,11 @@ export default {
             `;
             
             artifactsDisplay.appendChild(artifactEl);
+            if (['sql', 'sql_result', 'sql_error'].includes(artifactType)) {
+              // Find all code blocks in the artifact and apply syntax highlighting
+              const codeElements = artifactEl.querySelectorAll('code.language-sql');
+              codeElements.forEach(el => this.applySyntaxHighlighting(el));
+            }
           }
         }
       } else {
@@ -254,6 +358,12 @@ export default {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    };
+
+    this.applySyntaxHighlighting = function(element) {
+      if (window.hljs) {
+        window.hljs.highlightElement(element);
+      }
     };
     
     // Function to toggle thinking expanded/collapsed state
@@ -498,6 +608,72 @@ export default {
     
     el.querySelector(".next-button").addEventListener("click", () => {
       self.nextArtifact(model);
+    });
+
+    // Setup resize handler
+    const container = el.querySelector('.chat-widget-container');
+    const chatContainer = el.querySelector('.chat-container');
+    const resizeHandle = el.querySelector('#resize-handle');
+    const artifactsPanel = el.querySelector('.artifacts-panel');
+    
+    // Min and max width constraints
+    const MIN_CHAT_WIDTH = 300;
+    const MIN_PANEL_WIDTH = 250;
+    const MAX_PANEL_WIDTH = 600;
+    
+    // Set initial width if artifacts panel is visible
+    if (!artifactsPanel.classList.contains('hidden')) {
+      artifactsPanel.style.width = `${this.panelWidth}px`;
+    }
+    
+    // Handle mouse down event on resize handle
+    resizeHandle.addEventListener('mousedown', function(e) {
+      if (artifactsPanel.classList.contains('hidden')) return;
+      
+      // Start dragging
+      self.isDragging = true;
+      self.startX = e.clientX;
+      self.startWidth = artifactsPanel.offsetWidth;
+      
+      // Add dragging class to indicate resizing is in progress
+      container.classList.add('resizing');
+      
+      // Prevent text selection during drag
+      e.preventDefault();
+    });
+    
+    // Handle mouse move event (for drag resizing)
+    document.addEventListener('mousemove', function(e) {
+      if (!self.isDragging) return;
+      
+      // Calculate new width based on mouse movement
+      const containerWidth = container.offsetWidth;
+      const deltaX = self.startX - e.clientX;
+      let newWidth = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, self.startWidth + deltaX));
+      
+      // Ensure chat container doesn't get too small
+      if (containerWidth - newWidth < MIN_CHAT_WIDTH) {
+        newWidth = containerWidth - MIN_CHAT_WIDTH;
+      }
+      
+      // Apply the new width
+      artifactsPanel.style.width = `${newWidth}px`;
+      chatContainer.style.width = `calc(100% - ${newWidth}px)`;
+      
+      // Update state variable
+      self.panelWidth = newWidth;
+    });
+    
+    // Handle mouse up event (end dragging)
+    document.addEventListener('mouseup', function() {
+      if (self.isDragging) {
+        self.isDragging = false;
+        container.classList.remove('resizing');
+        
+        // Optionally save the width in model for persistence
+        model.set('artifact_panel_width', self.panelWidth);
+        model.save_changes();
+      }
     });
 
     // Listen for custom messages from the backend
