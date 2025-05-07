@@ -26,6 +26,9 @@ class ChatWidget(anywidget.AnyWidget):
     
     # Add a traitlet for panel width
     artifact_panel_width = traitlets.Int(350).tag(sync=True)
+    
+    # Add traitlet for tracking maximized state
+    is_maximized = traitlets.Bool(False).tag(sync=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -303,3 +306,7 @@ class ChatWidget(anywidget.AnyWidget):
     def _handle_resize(self, width):
         """Update the saved panel width."""
         self.artifact_panel_width = width
+        
+    def toggle_maximized(self):
+        """Toggle the maximized state of the widget."""
+        self.is_maximized = not self.is_maximized

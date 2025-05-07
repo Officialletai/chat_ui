@@ -18,6 +18,11 @@ export default {
       this.updateThinkingUI(model);
     });
 
+    // Listen for changes to maximized state
+    model.on("change:is_maximized", () => {
+      this.updateMaximizedState(model);
+    });
+
     // Load Highlight.js dynamically for syntax highlighting
     this.loadSyntaxHighlighter();
 
@@ -83,6 +88,42 @@ export default {
       }, 100); // Small delay to ensure CSS has updated
     }
   },
+
+  toggleMaximizedState(model) {
+    const newState = !model.get("is_maximized");
+    model.set("is_maximized", newState);
+    model.save_changes();
+  },
+
+  updateMaximizedState(model) {
+    const isMaximized = model.get("is_maximized") || false;
+    const container = document.querySelector('.chat-widget-container');
+    if (!container) return;
+    
+    const maximizeButton = container.querySelector('#maximize-button');
+    if (!maximizeButton) return;
+    
+    const maximizeIcon = maximizeButton.querySelector('.maximize-icon');
+    if (!maximizeIcon) return;
+    
+    if (isMaximized) {
+      // Apply maximized styles
+      container.classList.add('maximized');
+      maximizeIcon.textContent = '⤡'; // Minimize icon
+      maximizeButton.title = 'Minimize chat window';
+    } else {
+      // Apply normal styles
+      container.classList.remove('maximized');
+      maximizeIcon.textContent = '⤢'; // Maximize icon
+      maximizeButton.title = 'Maximize chat window';
+    }
+    
+    // Update the history scroll position after size change
+    const history = container.querySelector(".chat-history");
+    if (history) {
+      history.scrollTop = history.scrollHeight;
+    }
+  },
   
   render({ model, el }) {
     // Create widget with chat container, thinking UI, and initially hidden artifacts panel
@@ -91,12 +132,17 @@ export default {
       <div class="chat-container">
         <div class="chat-header">
           <div class="chat-title">Chat UI</div>
-          <div class="theme-toggle-container">
-            <label class="theme-switch" for="theme-checkbox">
-              <input type="checkbox" id="theme-checkbox">
-              <span class="theme-slider round"></span>
-            </label>
-            <span class="theme-label">Dark Mode</span>
+          <div class="header-controls">
+            <button id="maximize-button" title="Maximize chat window">
+              <span class="maximize-icon">⤢</span>
+            </button>
+            <div class="theme-toggle-container">
+              <label class="theme-switch" for="theme-checkbox">
+                <input type="checkbox" id="theme-checkbox">
+                <span class="theme-slider round"></span>
+              </label>
+              <span class="theme-label">Dark Mode</span>
+            </div>
           </div>
         </div>
         <div class="chat-history"></div>
@@ -136,6 +182,9 @@ export default {
     // Initialize resize state variables
     this.panelWidth = 350; // Default panel width 
     this.isDragging = false;
+
+    // Initialize maximized state
+    this.isMaximized = false;
 
     const themeToggle = el.querySelector('#theme-checkbox');
     themeToggle.addEventListener('change', (e) => {
@@ -600,6 +649,11 @@ export default {
         sendMessage();
       }
     });
+
+    // Event listeners for maximize button
+    el.querySelector("#maximize-button").addEventListener("click", () => {
+      self.toggleMaximizedState(model);
+    });
     
     // Event listeners for navigation buttons
     el.querySelector(".prev-button").addEventListener("click", () => {
@@ -712,6 +766,7 @@ export default {
 
     // Initialize the artifacts panel
     this.updateArtifactsNavigation(model);
+    this.updateMaximizedState(model);
     
     return () => {};
   }

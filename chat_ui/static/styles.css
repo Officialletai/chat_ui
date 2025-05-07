@@ -112,6 +112,36 @@
     overflow: hidden;
     background-color: var(--bg-color);
     color: var(--text-color);
+    transition: height 0.3s ease, width 0.3s ease, top 0.3s ease, left 0.3s ease, border-radius 0.3s ease;
+}
+
+.chat-widget-container.maximized {
+    position: relative; /* Keep in document flow */
+    width: 100% !important;
+    height: 80vh !important; /* Use vh for full viewport height */
+    max-height: 80vh !important; /* Use viewport height but leave space */
+    z-index: 9999;
+    border-radius: 0;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--button-bg); /* Highlight border when maximized */
+    z-index: 100; /* Higher than normal but not over Jupyter menus */
+}
+
+.chat-widget-container.maximized .chat-container {
+    height: 100%; /* Take full height of maximized parent */
+}
+  
+.chat-widget-container.maximized .chat-history {
+    flex: 1;
+    max-height: none; /* Allow it to grow beyond initial constraints */
+}
+  
+.chat-widget-container.maximized .input-container {
+    margin-top: auto; /* Pushes it to the bottom if .chat-container is flex-column */
+}
+
+.chat-widget-container.maximized #maximize-button {
+    background-color: color-mix(in srgb, var(--button-bg) 20%, transparent);
 }
 
 /* ============================================= */
@@ -139,11 +169,41 @@
     color: var(--text-color);
 }
 
+.header-controls {
+    display: flex;
+    align-items: center;
+}
+
+#maximize-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    margin-left: 10px; /* Add margin-left if theme-toggle is first, or right if this is first */
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+#maximize-button:hover {
+    background-color: color-mix(in srgb, var(--text-color) 10%, transparent);
+}
+
+.maximize-icon {
+    font-size: 16px; /* Adjust as needed */
+    line-height: 1;
+}
+
 .chat-history {
     flex: 1;
     overflow-y: auto;
     padding: 10px;
     background-color: var(--chat-bg);
+    scroll-behavior: smooth;
 }
 
 .message {
@@ -906,6 +966,11 @@ input:checked + .theme-slider:before {
         height: auto; /* Allow content to determine height */
         min-height: 650px; /* Or a suitable min-height */
     }
+    
+    .chat-widget-container.maximized {
+        max-height: 70vh !important;
+        height: 70vh !important;
+      }
 
     .artifacts-panel {
         width: 100% !important; /* Override inline style */
