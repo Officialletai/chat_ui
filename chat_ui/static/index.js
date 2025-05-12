@@ -69,7 +69,7 @@ export default {
       root.setAttribute('data-theme', 'dark');
       // Change highlight.js theme to a dark one
       if (themeCSS) {
-        themeCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/vs2015.min.css';
+        themeCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai.min.css';
       }
     } else {
       // Apply light theme
@@ -673,8 +673,9 @@ export default {
     // Min and max width constraints
     const MIN_CHAT_WIDTH = 300;
     const MIN_PANEL_WIDTH = 250;
-    const MAX_PANEL_WIDTH = 600;
-    
+    // const MAX_PANEL_WIDTH = 600;
+    const getMaxPanelWidth = () => Math.max(MIN_PANEL_WIDTH, window.innerWidth * 0.5);
+
     // Set initial width if artifacts panel is visible
     if (!artifactsPanel.classList.contains('hidden')) {
       artifactsPanel.style.width = `${this.panelWidth}px`;
@@ -703,7 +704,7 @@ export default {
       // Calculate new width based on mouse movement
       const containerWidth = container.offsetWidth;
       const deltaX = self.startX - e.clientX;
-      let newWidth = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, self.startWidth + deltaX));
+      let newWidth = Math.min(getMaxPanelWidth(), Math.max(MIN_PANEL_WIDTH, self.startWidth + deltaX));
       
       // Ensure chat container doesn't get too small
       if (containerWidth - newWidth < MIN_CHAT_WIDTH) {

@@ -472,7 +472,7 @@
     margin: 0;
     padding: 10px;
     font-family: monospace;
-    font-size: 13px;
+    font-size: 0.85em;
     line-height: 1.4;
     white-space: pre-wrap;
     overflow-x: auto;
@@ -554,13 +554,13 @@
 }
 
 .sql-query code, .hljs { /* Target both raw code and highlighted code */
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 10px;
-    display: block;
-    tab-size: 4;
-    color: var(--code-text);
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 0.9em !important;
+    line-height: 1.5 !important;
+    padding: 10px !important;
+    display: block !important;
+    tab-size: 4 !important;
+    color: var(--code-text) !important;
     background: var(--code-bg) !important; /* Important to override HLJS inline styles */
 }
 
